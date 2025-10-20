@@ -8,7 +8,7 @@
       <!-- Header com Banner de Background -->
       <div class="promotions-hero">
         <div class="hero-background">
-          <img src="~assets/Banner 1 desktop.png" class="banner-image" alt="Promoções" />
+          <img src="~assets/banner 1 desktop.png" class="banner-image" alt="Promoções" />
           <div class="banner-overlay"></div>
         </div>
         <div class="hero-content">

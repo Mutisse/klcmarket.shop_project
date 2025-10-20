@@ -13,7 +13,7 @@
           <q-skeleton v-if="loading1" type="rect" class="banner-skeleton" />
           <img
             v-show="!loading1"
-            src="~assets/Banner 1 desktop.png"
+            src="~assets/banner 1 desktop.png"
             class="banner-image"
             @load="loading1 = false"
           />
