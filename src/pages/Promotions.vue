@@ -8,31 +8,46 @@
       <!-- Header com Banner de Background -->
       <div class="promotions-hero">
         <div class="hero-background">
-          <img src="~assets/banner 1 desktop.png" class="banner-image" alt="Promoções" />
+          <img src="~/assets/image-removebg-preview.png" />
           <div class="banner-overlay"></div>
         </div>
         <div class="hero-content">
-          <div class="hero-badge">🔥 OFERTAS ESPECIAIS</div>
-          <h1 class="hero-title">Promoções Imperdíveis</h1>
-          <p class="hero-subtitle">Descontos exclusivos selecionados para você</p>
+          <!-- Badge com animação de pulso -->
+          <div class="hero-badge animated-badge">
+            <span class="fire-icon">🔥</span>
+            OFERTAS ESPECIAIS
+          </div>
           
+          <!-- Título principal com animação de digitação -->
+          <h1 class="hero-title typed-title">Promoções Imperdíveis</h1>
+          
+          <!-- Subtítulo com animação de fade in -->
+          <p class="hero-subtitle fade-in-subtitle">Descontos exclusivos selecionados para você</p>
+          
+          <!-- Features com animação stagger -->
           <div class="hero-features">
-            <div class="feature">
-              <q-icon name="verified" color="green" />
+            <div class="feature animated-feature" style="--delay: 0">
+              <q-icon name="verified" class="feature-icon" />
               <span>Produtos verificados</span>
             </div>
-            <div class="feature">
-              <q-icon name="local_shipping" color="blue" />
+            <div class="feature animated-feature" style="--delay: 1">
+              <q-icon name="local_shipping" class="feature-icon" />
               <span>Entrega rápida</span>
             </div>
-            <div class="feature">
-              <q-icon name="security" color="orange" />
+            <div class="feature animated-feature" style="--delay: 2">
+              <q-icon name="security" class="feature-icon" />
               <span>Compra segura</span>
             </div>
           </div>
         </div>
+        
+        <!-- Visual flutuante com animação - CORRIGIDO PARA NÃO FICAR OVAL -->
         <div class="hero-visual">
-          <div class="floating-discount">ATÉ 70% OFF</div>
+          <div class="floating-discount pulse-discount">
+            <span class="discount-text">ATÉ</span>
+            <span class="discount-value">70%</span>
+            <span class="discount-off">OFF</span>
+          </div>
         </div>
       </div>
 
@@ -118,7 +133,6 @@
             <div class="skeleton-content">
               <div class="skeleton-line short"></div>
               <div class="skeleton-line medium"></div>
-              <div class="skeleton-line long"></div>
               <div class="skeleton-price"></div>
               <div class="skeleton-button"></div>
             </div>
@@ -136,7 +150,6 @@
             <!-- Badge de Desconto -->
             <div class="discount-badge" v-if="product.discountPercentage > 0">
               <span class="discount-percent">-{{ product.discountPercentage }}%</span>
-              <div class="discount-ribbon"></div>
             </div>
 
             <!-- Hot Badge para produtos populares -->
@@ -156,7 +169,7 @@
               >
                 <template v-slot:loading>
                   <div class="image-placeholder">
-                    <q-spinner-rings color="#f27c38" size="2em" />
+                    <q-spinner-rings color="#bd6513" size="2em" />
                   </div>
                 </template>
               </q-img>
@@ -178,8 +191,8 @@
                 >
                   <q-icon :name="product.isFavorite ? 'favorite' : 'favorite_border'" />
                 </button>
-                <button class="action-btn compare" @click.stop="addToCompare(product)">
-                  <q-icon name="compare_arrows" />
+                <button class="action-btn view" @click.stop="quickView(product)">
+                  <q-icon name="visibility" />
                 </button>
               </div>
             </div>
@@ -190,23 +203,6 @@
               
               <h3 class="product-name" :title="product.name">{{ product.name }}</h3>
               
-              <p class="product-description">{{ truncateDescription(product.description) }}</p>
-              
-              <!-- Rating -->
-              <div class="product-rating">
-                <div class="stars">
-                  <q-icon 
-                    v-for="n in 5" 
-                    :key="n"
-                    :name="n <= Math.floor(product.rating || 4.5) ? 'star' : 'star_border'"
-                    :color="n <= Math.floor(product.rating || 4.5) ? 'orange' : 'grey-4'"
-                    size="16px"
-                  />
-                </div>
-                <span class="rating-value">{{ product.rating || '4.5' }}</span>
-                <span class="rating-count">({{ product.reviewCount || '125' }})</span>
-              </div>
-
               <!-- Preços -->
               <div class="price-section">
                 <div class="price-original" v-if="product.price_discount">
@@ -231,7 +227,7 @@
                 </div>
               </div>
 
-              <!-- Ações do Produto -->
+              <!-- Ações do Produto - BOTÕES "ADICIONAR" E "COMPRAR AGORA" DE VOLTA -->
               <div class="product-actions-bottom">
                 <button class="add-to-cart-btn" @click="addToCart(product)">
                   <q-icon name="add_shopping_cart" />
@@ -251,7 +247,6 @@
         <q-btn
           @click="loadMoreProducts"
           :loading="loadingMore"
-          color="primary"
           outline
           rounded
           class="load-more-btn"
@@ -273,7 +268,6 @@
         <div class="empty-actions">
           <q-btn 
             @click="resetFilters" 
-            color="primary" 
             outline
             class="reset-filters-btn"
           >
@@ -281,7 +275,6 @@
           </q-btn>
           <q-btn 
             @click="fetchPromotionProducts" 
-            color="primary"
             class="retry-btn"
           >
             Recarregar
@@ -293,10 +286,9 @@
     <!-- Footer Component -->
     <FooterC />
 
-    <!-- Quick View Modal Profissional -->
+    <!-- Quick View Modal -->
     <q-dialog v-model="showQuickView" maximized>
       <q-card class="quick-view-modal" v-if="selectedProduct">
-        <!-- Header Fixo -->
         <q-card-section class="modal-header">
           <div class="header-content">
             <div class="product-title-section">
@@ -331,12 +323,10 @@
           </div>
         </q-card-section>
 
-        <!-- Conteúdo Principal com Scroll -->
         <q-card-section class="modal-content">
           <div class="product-layout">
             <!-- Coluna da Galeria -->
             <div class="gallery-column">
-              <!-- Imagem Principal -->
               <div class="main-image-container">
                 <q-img
                   :src="getImageUrl(selectedProduct.images[0])"
@@ -347,39 +337,16 @@
                 >
                   <template v-slot:loading>
                     <div class="image-loading">
-                      <q-spinner-ores size="3em" color="primary" />
+                      <q-spinner-ores size="3em" color="#bd6513" />
                     </div>
                   </template>
                   
-                  <!-- Badges sobre a imagem -->
                   <div class="image-badges">
                     <div class="discount-badge-large" v-if="selectedProduct.discountPercentage > 0">
                       -{{ selectedProduct.discountPercentage }}% OFF
                     </div>
-                    <div class="featured-badge" v-if="selectedProduct.rating > 4.7">
-                      <q-icon name="whatshot" />
-                      Mais Vendido
-                    </div>
                   </div>
                 </q-img>
-              </div>
-
-              <!-- Miniaturas -->
-              <div class="thumbnails" v-if="selectedProduct.images && selectedProduct.images.length > 1">
-                <div 
-                  v-for="(image, index) in selectedProduct.images" 
-                  :key="index"
-                  class="thumbnail"
-                  :class="{ active: activeImageIndex === index }"
-                  @click="activeImageIndex = index"
-                >
-                  <q-img
-                    :src="getImageUrl(image)"
-                    :alt="`${selectedProduct.name} - Imagem ${index + 1}`"
-                    class="thumbnail-image"
-                    ratio="1"
-                  />
-                </div>
               </div>
             </div>
 
@@ -395,42 +362,16 @@
                     {{ formatPrice(selectedProduct.price_discount || selectedProduct.price) }} MT
                   </div>
                   <div class="savings" v-if="selectedProduct.discountPercentage > 0">
-                    <q-icon name="savings" color="green" />
+                    <q-icon name="savings" />
                     Economize {{ formatPrice(selectedProduct.price - selectedProduct.price_discount) }} MT
                   </div>
-                </div>
-
-                <!-- Rating e Reviews -->
-                <div class="rating-section">
-                  <div class="rating-display">
-                    <div class="stars">
-                      <q-icon 
-                        v-for="n in 5" 
-                        :key="n"
-                        :name="n <= Math.floor(selectedProduct.rating || 4.5) ? 'star' : 'star_border'"
-                        color="orange"
-                        size="20px"
-                      />
-                    </div>
-                    <div class="rating-text">
-                      <strong>{{ selectedProduct.rating || '4.5' }}</strong>
-                      <span class="review-count">({{ selectedProduct.reviewCount || '125' }} avaliações)</span>
-                    </div>
-                  </div>
-                  <q-btn 
-                    flat 
-                    dense 
-                    label="Ver todas as avaliações" 
-                    color="primary"
-                    class="reviews-btn"
-                  />
                 </div>
               </div>
 
               <!-- Timer de Promoção -->
               <div class="promotion-timer-card" v-if="selectedProduct.promotionEnds">
                 <div class="timer-header">
-                  <q-icon name="schedule" color="red" />
+                  <q-icon name="schedule" />
                   <span class="timer-title">Oferta por tempo limitado!</span>
                 </div>
                 <div class="timer-display">
@@ -451,7 +392,6 @@
                 </div>
                 <q-linear-progress
                   :value="getTimeProgress(selectedProduct.promotionEnds) / 100"
-                  color="red"
                   class="timer-progress"
                 />
               </div>
@@ -482,7 +422,6 @@
 
                 <div class="action-buttons">
                   <q-btn 
-                    color="primary" 
                     icon="add_shopping_cart" 
                     label="Adicionar ao Carrinho"
                     @click="addToCart(selectedProduct, quantity)"
@@ -490,7 +429,6 @@
                     size="lg"
                   />
                   <q-btn 
-                    color="positive" 
                     icon="flash_on" 
                     label="Comprar Agora"
                     @click="buyNow(selectedProduct, quantity)"
@@ -500,74 +438,8 @@
                 </div>
 
                 <div class="secure-purchase">
-                  <q-icon name="verified_user" color="green" />
+                  <q-icon name="verified_user" />
                   <span>Compra 100% segura e protegida</span>
-                </div>
-              </div>
-
-              <!-- Descrição Expandida -->
-              <div class="description-section">
-                <h3 class="section-title">Descrição do Produto</h3>
-                <p class="product-description-full">{{ selectedProduct.description }}</p>
-                
-                <div class="product-highlights">
-                  <h4>Destaques:</h4>
-                  <ul class="highlights-list">
-                    <li v-for="(highlight, index) in getProductHighlights(selectedProduct)" :key="index">
-                      <q-icon name="check_circle" color="green" />
-                      {{ highlight }}
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <!-- Características -->
-              <div class="features-section">
-                <h3 class="section-title">Características</h3>
-                <div class="features-grid">
-                  <div class="feature-item">
-                    <q-icon name="local_shipping" color="blue" />
-                    <div class="feature-content">
-                      <div class="feature-title">Entrega Rápida</div>
-                      <div class="feature-desc">Receba em 2-3 dias úteis</div>
-                    </div>
-                  </div>
-                  <div class="feature-item">
-                    <q-icon name="assignment_return" color="orange" />
-                    <div class="feature-content">
-                      <div class="feature-title">Devolução Grátis</div>
-                      <div class="feature-desc">30 dias para devolução</div>
-                    </div>
-                  </div>
-                  <div class="feature-item">
-                    <q-icon name="security" color="green" />
-                    <div class="feature-content">
-                      <div class="feature-title">Garantia</div>
-                      <div class="feature-desc">12 meses de garantia</div>
-                    </div>
-                  </div>
-                  <div class="feature-item">
-                    <q-icon name="support_agent" color="purple" />
-                    <div class="feature-content">
-                      <div class="feature-title">Suporte 24/7</div>
-                      <div class="feature-desc">Atendimento sempre disponível</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Especificações Técnicas -->
-              <div class="specs-section" v-if="selectedProduct.specifications">
-                <h3 class="section-title">Especificações Técnicas</h3>
-                <div class="specs-table">
-                  <div 
-                    v-for="(spec, key) in selectedProduct.specifications" 
-                    :key="key"
-                    class="spec-row"
-                  >
-                    <div class="spec-label">{{ formatSpecKey(key) }}:</div>
-                    <div class="spec-value">{{ spec }}</div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -578,14 +450,12 @@
         <q-card-section class="modal-footer" v-if="$q.screen.lt.md">
           <div class="mobile-actions">
             <q-btn 
-              color="primary" 
               icon="add_shopping_cart" 
               label="Adicionar"
               @click="addToCart(selectedProduct, quantity)"
               class="mobile-cart-btn"
             />
             <q-btn 
-              color="positive" 
               label="Comprar"
               @click="buyNow(selectedProduct, quantity)"
               class="mobile-buy-btn"
@@ -749,36 +619,6 @@ export default {
       }
     }
 
-    const getProductHighlights = (product) => {
-      const highlights = [
-        'Produto de alta qualidade',
-        'Material durável e resistente',
-        'Design moderno e elegante',
-        'Fácil de usar e manter'
-      ]
-      
-      if (product.discountPercentage > 30) {
-        highlights.unshift('Oferta especial com desconto exclusivo')
-      }
-      if (product.rating > 4.5) {
-        highlights.unshift('Avaliação excelente pelos clientes')
-      }
-      
-      return highlights.slice(0, 4)
-    }
-
-    const formatSpecKey = (key) => {
-      const specNames = {
-        'weight': 'Peso',
-        'dimensions': 'Dimensões',
-        'material': 'Material',
-        'color': 'Cor',
-        'warranty': 'Garantia',
-        'brand': 'Marca'
-      }
-      return specNames[key] || key
-    }
-
     const shareProduct = () => {
       $q.notify({
         message: 'Link do produto copiado!',
@@ -870,14 +710,6 @@ export default {
       showQuickView.value = false
     }
 
-    const addToCompare = (product) => {
-      $q.notify({
-        message: `${product.name} adicionado à comparação`,
-        color: 'info',
-        position: 'top'
-      })
-    }
-
     const buyNow = (product, qty = 1) => {
       addToCart(product, qty)
       $q.notify({
@@ -890,13 +722,6 @@ export default {
     const getImageUrl = (imageName) => {
       if (!imageName) return 'https://via.placeholder.com/300x300/f8f9fa/666666?text=Produto'
       return apiMethods.baseURL() + `/storage/product_images/${imageName.name}`
-    }
-
-    const truncateDescription = (description, length = 80) => {
-      if (!description) return 'Descrição não disponível'
-      return description.length > length 
-        ? description.substring(0, length) + '...' 
-        : description
     }
 
     const formatPrice = (price) => {
@@ -946,17 +771,13 @@ export default {
       loadMoreProducts,
       toggleFavorite,
       addToCart,
-      addToCompare,
       buyNow,
       quickView,
       getImageUrl,
-      truncateDescription,
       formatPrice,
       formatTimeRemaining,
       getTimeProgress,
       getTimeUnits,
-      getProductHighlights,
-      formatSpecKey,
       shareProduct
     }
   }
@@ -966,6 +787,7 @@ export default {
 <style scoped>
 .promotions-page {
   min-height: 100vh;
+  background: #fafafa;
   display: flex;
   flex-direction: column;
 }
@@ -978,10 +800,10 @@ export default {
   width: 100%;
 }
 
-/* 🎨 Hero Section com Banner de Background */
+/* Hero Section Modernizada com imagem corrigida */
 .promotions-hero {
   position: relative;
-  border-radius: 24px;
+  border-radius: 20px;
   padding: 60px 40px;
   margin: 24px 0;
   color: white;
@@ -990,7 +812,8 @@ export default {
   gap: 40px;
   align-items: center;
   overflow: hidden;
-  min-height: 400px;
+  min-height: 500px;
+  background: linear-gradient(135deg, #bd6513 0%, #d97a1a94 100%);
 }
 
 .hero-background {
@@ -1000,28 +823,27 @@ export default {
   width: 100%;
   height: 100%;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .banner-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
   object-position: center;
+  opacity: 0.15;
 }
 
-/* 🎨 Overlay com tonalidade mais suave */
 .banner-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(242, 124, 56, 0.6) 0%,        /* Laranja principal mais suave */
-    rgba(255, 165, 0, 0.4) 50%,       /* Laranja médio */
-    rgba(255, 140, 0, 0.3) 100%       /* Laranja escuro suave */
-  );
   z-index: 2;
 }
 
@@ -1035,78 +857,377 @@ export default {
   z-index: 3;
 }
 
-/* 🎨 Badge com tonalidade vibrante */
-.hero-badge {
-  background: linear-gradient(135deg, #ff8c00, #ffa500); /* Laranja vibrante */
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.8rem;
+/* Animações para a seção hero */
+
+/* Badge animada */
+.animated-badge {
+  animation: 
+    slideInDown 0.8s ease-out,
+    pulseGlow 2s ease-in-out infinite 1s;
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 0.9rem;
   font-weight: 600;
-  display: inline-block;
-  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 20px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
 }
 
-.hero-title {
-  font-size: 3rem;
-  font-weight: 700;
+.animated-badge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shine 3s ease-in-out infinite;
+}
+
+.fire-icon {
+  display: inline-block;
+  animation: firePulse 1.5s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(255, 255, 255, 0.3),
+      inset 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(255, 255, 255, 0.5),
+      inset 0 0 30px rgba(255, 255, 255, 0.2);
+  }
+}
+
+@keyframes shine {
+  0% {
+    transform: rotate(45deg) translateX(-100%);
+  }
+  100% {
+    transform: rotate(45deg) translateX(100%);
+  }
+}
+
+@keyframes firePulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.1) rotate(-5deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(-3deg);
+  }
+}
+
+/* Título com efeito de digitação */
+.typed-title {
+  overflow: hidden;
+  border-right: 3px solid white;
+  white-space: nowrap;
+  animation: 
+    typing 1.5s steps(20, end),
+    blinkCursor 0.8s step-end infinite;
+  font-size: 3.5rem;
+  font-weight: 800;
   margin-bottom: 16px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  line-height: 1.1;
 }
 
-.hero-subtitle {
-  font-size: 1.2rem;
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blinkCursor {
+  from, to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: white;
+  }
+}
+
+/* Subtítulo com fade in */
+.fade-in-subtitle {
+  animation: fadeInUp 1s ease-out 0.5s both;
+  font-size: 1.3rem;
   opacity: 0.9;
   margin-bottom: 40px;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  font-weight: 300;
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Features com animação stagger */
 .hero-features {
   display: flex;
-  gap: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-/* 🎨 Features com tonalidade suave */
-.feature {
+.animated-feature {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideInFeature 0.6s ease-out forwards;
+  animation-delay: calc(var(--delay) * 0.2s + 1s);
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  opacity: 0.9;
-  background: rgba(255, 165, 0, 0.2); /* Laranja muito suave */
-  padding: 8px 16px;
-  border-radius: 12px;
+  gap: 10px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 12px 20px;
+  border-radius: 15px;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 165, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
 }
 
-/* 🎨 Floating Discount com tonalidade média */
+.animated-feature:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+@keyframes slideInFeature {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.feature-icon {
+  animation: bounceIn 0.8s ease-out forwards;
+  animation-delay: calc(var(--delay) * 0.2s + 1.5s);
+  opacity: 0;
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-180deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(10deg);
+  }
+  70% {
+    transform: scale(0.9) rotate(-5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* CORREÇÃO PARA A SEÇÃO "ATÉ 70% OFF" NÃO FICAR OVAL EM SMARTPHONE */
 .floating-discount {
-  background: linear-gradient(135deg, #ff7b00, #ff9500); /* Laranja médio */
-  padding: 20px;
-  border-radius: 50%;
-  font-size: 1.2rem;
+  animation: 
+    float 3s ease-in-out infinite,
+    discountPulse 2s ease-in-out infinite,
+    rotate3D 8s ease-in-out infinite;
+  transform-style: preserve-3d;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 25px 20px; /* Reduzido padding vertical, aumentado horizontal */
+  border-radius: 20px; /* Bordas mais suaves em vez de completamente redondas */
   font-weight: 700;
-  backdrop-filter: blur(10px);
-  animation: float 3s ease-in-out infinite;
+  backdrop-filter: blur(15px);
   border: 2px solid rgba(255, 255, 255, 0.3);
   text-align: center;
-  min-width: 120px;
-  min-height: 120px;
+  min-width: 140px; /* Largura mínima reduzida */
+  min-height: 140px; /* Altura mínima reduzida */
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(255, 123, 0, 0.4);
+  box-shadow: 0 15px 35px rgba(255, 215, 0, 0.2);
 }
 
+.discount-text {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  animation: textGlow 2s ease-in-out infinite;
+}
+
+.discount-value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 4px 0;
+  animation: valuePulse 1.5s ease-in-out infinite;
+  background: linear-gradient(45deg, #ffd700, #ff6b00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.discount-off {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  animation: slideInUp 1s ease-in-out infinite alternate;
+}
+
+@keyframes discountPulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 
+      0 10px 30px rgba(255, 215, 0, 0.3),
+      inset 0 0 20px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    transform: scale(1.05) rotate(5deg);
+    box-shadow: 
+      0 15px 40px rgba(255, 215, 0, 0.5),
+      inset 0 0 30px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+  }
+}
+
+@keyframes valuePulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    transform: scale(1.1);
+    filter: hue-rotate(45deg);
+  }
+}
+
+@keyframes rotate3D {
+  0%, 100% {
+    transform: rotateY(0deg) rotateX(0deg);
+  }
+  25% {
+    transform: rotateY(10deg) rotateX(5deg);
+  }
+  50% {
+    transform: rotateY(0deg) rotateX(10deg);
+  }
+  75% {
+    transform: rotateY(-10deg) rotateX(5deg);
+  }
+}
+
+/* Animação de float atualizada */
 @keyframes float {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-10px) scale(1.05); }
+  0%, 100% { 
+    transform: translateY(0px) rotateY(0deg); 
+  }
+  50% { 
+    transform: translateY(-15px) rotateY(10deg); 
+  }
 }
 
-/* 🎨 Stats Bar */
+/* Ajustes específicos para mobile */
+@media (max-width: 768px) {
+  .floating-discount {
+    padding: 20px 15px; /* Padding ainda menor em mobile */
+    min-width: 120px;
+    min-height: 120px;
+    border-radius: 16px; /* Bordas ainda mais suaves */
+  }
+  
+  .discount-value {
+    font-size: 1.6rem; /* Tamanho reduzido do valor */
+  }
+  
+  .discount-text, .discount-off {
+    font-size: 0.8rem; /* Texto menor */
+  }
+}
+
+@media (max-width: 480px) {
+  .floating-discount {
+    padding: 15px 12px;
+    min-width: 100px;
+    min-height: 100px;
+    border-radius: 12px; /* Quase retangular em telas muito pequenas */
+  }
+  
+  .discount-value {
+    font-size: 1.4rem;
+  }
+}
+
+/* Efeito de partículas no background */
+.hero-background::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 100px 100px, 150px 150px, 200px 200px;
+  animation: particlesMove 20s linear infinite;
+  z-index: 2;
+}
+
+@keyframes particlesMove {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-100px);
+  }
+}
+
+/* Stats Bar Modernizada */
 .stats-bar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1115,21 +1236,18 @@ export default {
   padding: 24px;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
 }
 
 .stat-item {
   text-align: center;
 }
 
-/* 🎨 Estatísticas com gradiente laranja */
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #f27c38, #ff8c00);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #bd6513;
   margin-bottom: 4px;
 }
 
@@ -1138,27 +1256,23 @@ export default {
   font-size: 0.9rem;
 }
 
-/* 🎨 Filtros Section */
+/* Filtros Section Modernizada */
 .filters-section {
   background: white;
   border-radius: 16px;
   padding: 24px;
   margin: 32px 0;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
 }
 
-/* 🎨 Filtros - Borda inferior laranja */
 .filters-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 3px solid #f27c38; /* Borda laranja */
-  background: linear-gradient(to right, #f27c38, transparent);
-  background-size: 100% 3px;
-  background-repeat: no-repeat;
-  background-position: bottom;
+  border-bottom: 2px solid #f5f5f5;
 }
 
 .filters-header h3 {
@@ -1203,7 +1317,7 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border: 2px solid #e1e5e9;
+  border: 2px solid #e8e8e8;
   border-radius: 25px;
   background: white;
   font-size: 0.9rem;
@@ -1214,19 +1328,18 @@ export default {
 }
 
 .filter-chip:hover {
-  border-color: #f27c38;
-  color: #f27c38;
+  border-color: #bd6513;
+  color: #bd6513;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(242, 124, 56, 0.1);
+  box-shadow: 0 4px 12px rgba(189, 101, 19, 0.1);
 }
 
-/* 🎨 Filtros Ativos - Gradiente laranja diferente */
 .filter-chip.active {
-  background: linear-gradient(135deg, #ff6b00, #ff8c00); /* Laranja mais quente */
-  border-color: #ff6b00;
+  background: #bd6513;
+  border-color: #bd6513;
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(189, 101, 19, 0.2);
 }
 
 .filter-actions {
@@ -1253,7 +1366,7 @@ export default {
   width: 100%;
 }
 
-/* 🎨 Products Grid */
+/* Products Grid - 2 CARDS POR LINHA EM DISPOSITIVOS MENORES */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -1266,8 +1379,9 @@ export default {
   background: white;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #f5f5f5;
   animation: cardEnter 0.6s ease-out;
 }
 
@@ -1283,56 +1397,41 @@ export default {
 }
 
 .product-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border-color: #e8e8e8;
 }
 
-/* 🎨 Badge de Desconto com tonalidade vibrante */
+/* Badges Modernizados */
 .discount-badge {
   position: absolute;
   top: 16px;
   left: 16px;
-  background: linear-gradient(135deg, #ff8c00, #ffa500); /* Laranja vibrante */
+  background: #bd6513;
   color: white;
   padding: 8px 12px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 700;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  box-shadow: 0 4px 8px rgba(255, 140, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(189, 101, 19, 0.3);
 }
 
-.discount-ribbon {
-  width: 0;
-  height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 6px solid #ff8c00;
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-/* 🎨 Hot Badge com tonalidade avermelhada */
 .hot-badge {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: linear-gradient(135deg, #ff4500, #ff6347); /* Laranja avermelhado */
+  background: #ff6b35;
   color: white;
   padding: 6px 12px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 0.7rem;
   font-weight: 600;
   z-index: 2;
   display: flex;
   align-items: center;
   gap: 4px;
-  box-shadow: 0 4px 8px rgba(255, 69, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
 }
 
 .product-image-container {
@@ -1393,7 +1492,7 @@ export default {
 }
 
 .overlay-btn:hover {
-  background: #f27c38;
+  background: #bd6513;
   color: white;
   transform: translateY(-2px);
 }
@@ -1427,16 +1526,17 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  color: #666;
 }
 
 .action-btn:hover {
-  background: #f27c38;
+  background: #bd6513;
   color: white;
   transform: scale(1.1);
 }
 
 .action-btn.active {
-  background: #f27c38;
+  background: #bd6513;
   color: white;
 }
 
@@ -1445,7 +1545,7 @@ export default {
 }
 
 .product-category {
-  color: #f27c38;
+  color: #bd6513;
   font-size: 0.8rem;
   font-weight: 600;
   margin-bottom: 8px;
@@ -1455,46 +1555,13 @@ export default {
 .product-name {
   font-size: 1.1rem;
   font-weight: 600;
-  margin-bottom: 8px;
-  color: #333;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.product-description {
-  color: #666;
-  font-size: 0.9rem;
-  line-height: 1.4;
   margin-bottom: 16px;
+  color: #333;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.product-rating {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.stars {
-  display: flex;
-  gap: 2px;
-}
-
-.rating-value {
-  font-weight: 600;
-  color: #333;
-  margin: 0 4px;
-}
-
-.rating-count {
-  color: #666;
-  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .price-section {
@@ -1508,19 +1575,15 @@ export default {
   margin-bottom: 4px;
 }
 
-/* 🎨 Preços com gradiente laranja */
 .price-current {
   font-size: 1.3rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #f27c38, #ff8c00);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #bd6513;
   margin-bottom: 4px;
 }
 
 .price-savings {
-  color: #00c851;
+  color: #00a651;
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -1534,35 +1597,34 @@ export default {
   align-items: center;
   gap: 6px;
   margin-bottom: 8px;
-  color: #ff6b35;
+  color: #bd6513;
   font-size: 0.8rem;
   font-weight: 600;
 }
 
 .timer-bar {
   height: 4px;
-  background: #e0e0e0;
+  background: #f0f0f0;
   border-radius: 2px;
   overflow: hidden;
 }
 
-/* 🎨 Timer com gradiente laranja */
 .timer-progress {
   height: 100%;
-  background: linear-gradient(90deg, #ff8c00, #ffa500, #ff6b00);
+  background: #bd6513;
   border-radius: 2px;
   transition: width 0.3s ease;
 }
 
+/* Ações do Produto - BOTÕES "ADICIONAR" E "COMPRAR AGORA" DE VOLTA */
 .product-actions-bottom {
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 12px;
 }
 
-/* 🎨 Botão Carrinho com gradiente */
 .add-to-cart-btn {
-  background: linear-gradient(135deg, #f27c38, #ff8c00); /* Do principal para laranja */
+  background: #bd6513;
   color: white;
   border: none;
   padding: 12px;
@@ -1577,16 +1639,15 @@ export default {
 }
 
 .add-to-cart-btn:hover {
-  background: linear-gradient(135deg, #d26932, #e67e22);
+  background: #a55611;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(242, 124, 56, 0.3);
+  box-shadow: 0 4px 12px rgba(189, 101, 19, 0.3);
 }
 
-/* 🎨 Botão Comprar com gradiente invertido */
 .buy-now-btn {
-  background: linear-gradient(135deg, #ff6b00, #f27c38); /* Invertido */
-  color: white;
-  border: none;
+  background: white;
+  color: #bd6513;
+  border: 2px solid #bd6513;
   padding: 12px;
   border-radius: 8px;
   font-weight: 600;
@@ -1595,28 +1656,30 @@ export default {
 }
 
 .buy-now-btn:hover {
-  background: linear-gradient(135deg, #e65c00, #d26932);
+  background: #bd6513;
+  color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(189, 101, 19, 0.3);
 }
 
-/* 🎨 Load More Section */
+/* Load More Section */
 .load-more-section {
   text-align: center;
   margin: 60px 0;
 }
 
 .load-more-btn {
-  border-color: #f27c38;
-  color: #f27c38;
+  border-color: #bd6513;
+  color: #bd6513;
+  padding: 12px 32px;
 }
 
 .load-more-btn:hover {
-  background: #f27c38;
+  background: #bd6513;
   color: white;
 }
 
-/* 🎨 Empty State */
+/* Empty State */
 .empty-state {
   text-align: center;
   padding: 80px 20px;
@@ -1626,6 +1689,7 @@ export default {
 .empty-state h3 {
   font-size: 1.5rem;
   margin: 20px 0 12px;
+  color: #333;
 }
 
 .empty-state p {
@@ -1639,43 +1703,41 @@ export default {
 }
 
 .reset-filters-btn {
-  border-color: #f27c38;
-  color: #f27c38;
+  border-color: #bd6513;
+  color: #bd6513;
 }
 
 .reset-filters-btn:hover {
-  background: #f27c38;
+  background: #bd6513;
   color: white;
 }
 
 .retry-btn {
-  background: #f27c38;
+  background: #bd6513;
   color: white;
 }
 
 .retry-btn:hover {
-  background: #d26932;
+  background: #a55611;
 }
 
-/* 🎨 Quick View Modal */
+/* Quick View Modal Modernizada */
 .quick-view-modal {
   width: 95vw;
   height: 95vh;
-  max-width: 1400px;
+  max-width: 1200px;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
 }
 
-/* 🎨 Header Fixo */
 .modal-header {
   background: white;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #f0f0f0;
   padding: 20px 30px;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
@@ -1705,7 +1767,7 @@ export default {
 }
 
 .category-badge {
-  background: linear-gradient(135deg, #f27c38, #ff8c00);
+  background: #bd6513;
   color: white;
   padding: 4px 12px;
   border-radius: 12px;
@@ -1717,7 +1779,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #00c853;
+  color: #00a651;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -1733,11 +1795,10 @@ export default {
 }
 
 .action-icon:hover, .close-btn:hover {
-  color: #f27c38;
+  color: #bd6513;
   transform: scale(1.1);
 }
 
-/* 🎨 Conteúdo Principal */
 .modal-content {
   padding: 0;
   height: calc(100% - 80px);
@@ -1751,9 +1812,8 @@ export default {
   gap: 0;
 }
 
-/* 🎨 Coluna da Galeria */
 .gallery-column {
-  background: #f8f9fa;
+  background: #fafafa;
   padding: 30px;
   display: flex;
   flex-direction: column;
@@ -1764,7 +1824,8 @@ export default {
   position: relative;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  background: white;
 }
 
 .main-image {
@@ -1791,58 +1852,15 @@ export default {
 }
 
 .discount-badge-large {
-  background: linear-gradient(135deg, #ff4444, #ff6b6b);
+  background: #bd6513;
   color: white;
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
+  box-shadow: 0 4px 12px rgba(189, 101, 19, 0.3);
 }
 
-.featured-badge {
-  background: linear-gradient(135deg, #ff8c00, #ffa500);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* 🎨 Miniaturas */
-.thumbnails {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 10px 0;
-}
-
-.thumbnail {
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  overflow: hidden;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
-.thumbnail.active {
-  border-color: #f27c38;
-  transform: scale(1.05);
-}
-
-.thumbnail-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* 🎨 Coluna de Informações */
 .info-column {
   padding: 30px;
   background: white;
@@ -1852,9 +1870,8 @@ export default {
   overflow-y: auto;
 }
 
-/* 🎨 Seção de Preços */
 .pricing-section {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #f0f0f0;
   padding-bottom: 20px;
 }
 
@@ -1872,10 +1889,7 @@ export default {
 .current-price {
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #f27c38, #ff8c00);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #bd6513;
   margin-bottom: 8px;
 }
 
@@ -1883,47 +1897,14 @@ export default {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #00c853;
+  color: #00a651;
   font-weight: 600;
   font-size: 0.9rem;
 }
 
-.rating-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.rating-display {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.stars {
-  display: flex;
-  gap: 2px;
-}
-
-.rating-text {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.review-count {
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.reviews-btn {
-  font-size: 0.8rem;
-}
-
-/* 🎨 Timer de Promoção */
 .promotion-timer-card {
-  background: linear-gradient(135deg, #fff3e0, #ffecb3);
-  border: 1px solid #ffd54f;
+  background: #fff9f0;
+  border: 1px solid #ffe0b2;
   border-radius: 12px;
   padding: 20px;
   margin: 15px 0;
@@ -1934,11 +1915,11 @@ export default {
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
+  color: #bd6513;
 }
 
 .timer-title {
   font-weight: 600;
-  color: #e65100;
 }
 
 .timer-display {
@@ -1957,12 +1938,13 @@ export default {
   padding: 8px 12px;
   border-radius: 8px;
   min-width: 60px;
+  border: 1px solid #f0f0f0;
 }
 
 .time-value {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #e65100;
+  color: #bd6513;
 }
 
 .time-label {
@@ -1974,21 +1956,25 @@ export default {
 .time-separator {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #e65100;
+  color: #bd6513;
   margin-top: -8px;
 }
 
 .timer-progress {
   height: 6px;
   border-radius: 3px;
+  background: #f0f0f0;
 }
 
-/* 🎨 Ações de Compra */
+.timer-progress .q-linear-progress__model {
+  background: #bd6513;
+}
+
 .purchase-actions {
-  background: #f8f9fa;
+  background: #fafafa;
   border-radius: 12px;
   padding: 20px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #f0f0f0;
 }
 
 .quantity-selector {
@@ -2016,6 +2002,11 @@ export default {
 .quantity-btn {
   width: 32px;
   height: 32px;
+  color: #666;
+}
+
+.quantity-btn:hover {
+  color: #bd6513;
 }
 
 .quantity-value {
@@ -2023,6 +2014,7 @@ export default {
   font-size: 1.1rem;
   min-width: 30px;
   text-align: center;
+  color: #333;
 }
 
 .action-buttons {
@@ -2039,11 +2031,23 @@ export default {
 }
 
 .cart-btn {
-  background: linear-gradient(135deg, #f27c38, #ff8c00);
+  background: #bd6513;
+  color: white;
+}
+
+.cart-btn:hover {
+  background: #a55611;
 }
 
 .buy-btn {
-  background: linear-gradient(135deg, #00c853, #00e676);
+  background: white;
+  color: #bd6513;
+  border: 2px solid #bd6513;
+}
+
+.buy-btn:hover {
+  background: #bd6513;
+  color: white;
 }
 
 .secure-purchase {
@@ -2055,107 +2059,13 @@ export default {
   font-size: 0.9rem;
 }
 
-/* 🎨 Seções de Conteúdo */
-.section-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 15px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #f0f0f0;
-}
-
-.product-description-full {
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-
-.product-highlights {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 12px;
-  border-left: 4px solid #f27c38;
-}
-
-.highlights-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.highlights-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  color: #555;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 3px solid #f27c38;
-}
-
-.feature-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.feature-title {
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 4px;
-}
-
-.feature-desc {
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.specs-table {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.spec-row {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 15px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.spec-label {
-  font-weight: 600;
-  color: #333;
-}
-
-.spec-value {
-  color: #666;
-}
-
-/* 🎨 Footer Mobile */
 .modal-footer {
   background: white;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid #f0f0f0;
   padding: 15px 20px;
   position: sticky;
   bottom: 0;
   z-index: 100;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .mobile-actions {
@@ -2169,12 +2079,24 @@ export default {
   font-weight: 600;
 }
 
+.mobile-cart-btn {
+  background: #bd6513;
+  color: white;
+}
+
+.mobile-buy-btn {
+  background: white;
+  color: #bd6513;
+  border: 2px solid #bd6513;
+}
+
 /* Skeleton Loading */
 .skeleton {
   background: white;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f5f5f5;
 }
 
 .skeleton-image {
@@ -2204,10 +2126,6 @@ export default {
   width: 80%;
 }
 
-.skeleton-line.long {
-  width: 100%;
-}
-
 .skeleton-price {
   height: 20px;
   width: 40%;
@@ -2233,143 +2151,336 @@ export default {
   }
 }
 
-/* Responsividade */
+/* RESPONSIVIDADE - 2 CARDS POR LINHA EM DISPOSITIVOS MENORES */
 @media (max-width: 1024px) {
-  .promotions-hero {
-    grid-template-columns: 1fr;
-    text-align: center;
-    gap: 24px;
-  }
-  
-  .hero-features {
-    justify-content: center;
-  }
-  
-  .filter-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .search-input {
-    min-width: 100%;
-  }
-  
-  .modal-content {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  
-  .quick-view-modal {
-    width: 98vw;
-    height: 98vh;
-  }
-  
-  .product-layout {
-    grid-template-columns: 1fr;
-  }
-  
-  .gallery-column {
-    max-height: 400px;
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
   }
 }
 
 @media (max-width: 768px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 cards por linha */
+    gap: 16px;
+  }
+  
+  .product-card {
+    min-height: 380px;
+  }
+  
+  .product-image {
+    height: 180px;
+  }
+  
+  .product-info {
+    padding: 16px;
+  }
+  
+  .product-name {
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+  
+  .price-current {
+    font-size: 1.1rem;
+  }
+  
+  .product-actions-bottom {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .add-to-cart-btn, .buy-now-btn {
+    padding: 10px;
+    font-size: 0.8rem;
+  }
+  
+  /* Ajustes para badges em mobile */
+  .discount-badge {
+    top: 12px;
+    left: 12px;
+    padding: 6px 10px;
+    font-size: 0.7rem;
+  }
+  
+  .hot-badge {
+    top: 12px;
+    right: 12px;
+    padding: 4px 8px;
+    font-size: 0.6rem;
+  }
+  
+  .product-actions {
+    top: 12px;
+    right: 12px;
+    gap: 6px;
+  }
+  
+  .action-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .action-btn q-icon {
+    font-size: 16px;
+  }
+  
+  /* Ajustes para overlay em mobile */
+  .image-overlay {
+    padding: 10px;
+  }
+  
+  .overlay-btn {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+  }
+  
+  .overlay-btn q-icon {
+    font-size: 14px;
+  }
+
+  /* Ajustes gerais para mobile */
+  .typed-title {
+    animation: 
+      typingMobile 1.2s steps(15, end),
+      blinkCursor 0.8s step-end infinite;
+    white-space: normal;
+    border-right: none;
+    font-size: 2.5rem;
+  }
+
+  @keyframes typingMobile {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
+
+  .pulse-discount {
+    animation: 
+      float 3s ease-in-out infinite,
+      discountPulse 2s ease-in-out infinite;
+  }
+
+  .discount-value {
+    font-size: 1.4rem;
+  }
+
+  .promotions-hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 24px;
+    padding: 40px 20px;
+    min-height: 400px;
+  }
+
+  .hero-features {
+    justify-content: center;
+  }
+
+  .filter-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-input {
+    min-width: 100%;
+  }
+
+  .product-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-view-modal {
+    width: 98vw;
+    height: 98vh;
+  }
+
   .stats-bar {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .filters-header {
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
   }
-  
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-  }
-  
-  .product-actions-bottom {
-    grid-template-columns: 1fr;
-  }
-  
+
   .empty-actions {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .modal-header {
     padding: 15px 20px;
   }
-  
+
   .product-title {
     font-size: 1.2rem;
   }
-  
+
   .current-price {
     font-size: 2rem;
   }
-  
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-  
+
   .action-buttons {
     flex-direction: column;
   }
-  
-  .spec-row {
-    grid-template-columns: 1fr;
+
+  .gallery-column, .info-column {
+    padding: 15px;
+  }
+
+  .timer-display {
     gap: 5px;
+  }
+
+  .time-unit {
+    min-width: 50px;
+    padding: 6px 8px;
+  }
+
+  .time-value {
+    font-size: 1.1rem;
   }
 }
 
 @media (max-width: 480px) {
   .products-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr); /* Mantém 2 cards por linha */
+    gap: 12px;
   }
   
+  .product-card {
+    min-height: 350px;
+  }
+  
+  .product-image {
+    height: 150px;
+  }
+  
+  .product-info {
+    padding: 12px;
+  }
+  
+  .product-category {
+    font-size: 0.7rem;
+  }
+  
+  .product-name {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+  
+  .price-section {
+    margin-bottom: 12px;
+  }
+  
+  .price-original {
+    font-size: 0.8rem;
+  }
+  
+  .price-current {
+    font-size: 1rem;
+  }
+  
+  .price-savings {
+    font-size: 0.7rem;
+  }
+  
+  .offer-timer {
+    margin-bottom: 12px;
+  }
+  
+  .timer-content {
+    font-size: 0.7rem;
+  }
+  
+  .add-to-cart-btn, .buy-now-btn {
+    padding: 8px;
+    font-size: 0.75rem;
+  }
+  
+  .add-to-cart-btn q-icon, .buy-now-btn q-icon {
+    font-size: 14px;
+  }
+
   .hero-features {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .filter-chips {
     justify-content: center;
   }
-  
+
   .filter-chip {
     flex: 1;
     min-width: 120px;
     justify-content: center;
   }
-  
+
   .hero-title {
     font-size: 2rem;
   }
-  
+
   .floating-discount {
-    min-width: 100px;
-    min-height: 100px;
+    min-width: 120px;
+    min-height: 120px;
     font-size: 1rem;
   }
-  
-  .gallery-column, .info-column {
-    padding: 15px;
+
+  .banner-image {
+    opacity: 0.1;
+  }
+}
+
+/* Ajustes específicos para telas muito pequenas */
+@media (max-width: 360px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   
-  .timer-display {
-    gap: 5px;
+  .product-card {
+    min-height: 320px;
   }
   
-  .time-unit {
-    min-width: 50px;
-    padding: 6px 8px;
+  .product-image {
+    height: 130px;
   }
   
-  .time-value {
-    font-size: 1.1rem;
+  .product-info {
+    padding: 10px;
   }
+  
+  .product-name {
+    font-size: 0.85rem;
+    line-height: 1.3;
+  }
+  
+  .price-current {
+    font-size: 0.9rem;
+  }
+  
+  .add-to-cart-btn, .buy-now-btn {
+    padding: 6px;
+    font-size: 0.7rem;
+  }
+}
+
+/* Correção específica para a imagem do banner */
+.hero-background .banner-image {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  opacity: 0.15;
 }
 </style>

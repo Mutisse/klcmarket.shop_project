@@ -20,7 +20,7 @@
           text-color="white"
         >
           <q-img v-if="receiverAvatar" :src="receiverAvatar" />
-          <q-icon v-else name="person" />
+          <q-icon v-else name="chat" />
         </q-avatar>
 
         <div class="col">
@@ -157,7 +157,7 @@
         text-color="white"
       >
         <q-img v-if="receiverAvatar" :src="receiverAvatar" />
-        <q-icon v-else name="person" />
+        <q-icon v-else name="chat" />
       </q-avatar>
       <div class="notification-dot" v-if="hasNewMessages"></div>
     </div>

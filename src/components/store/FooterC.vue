@@ -53,6 +53,7 @@
     <div class="footer-bottom">
       <p>&copy; 2024 KLC Market. Todos os direitos reservados.</p>
     </div>
+
     <div class="botao-lateral">
       <div @click="contactSupport">
         <img
@@ -65,32 +66,39 @@
       </div>
     </div>
 
-<!-- Banner inicial de notificação -->
-<div
-  v-if="showBanner && !notificationsEnabled"
-  class="notificacao-banner"
-  @click="requestNotificationPermission"
->
-  <q-icon name="notifications" size="20px" class="q-mr-sm" />
-  <span>Ative as notificações para receber novidades!</span>
-</div>
+    <!-- Componente ChatFloat adicionado aqui -->
+    <ChatFloat />
 
-<!-- Botão fixo lateral -->
-<div
-  v-else-if="!notificationsEnabled"
-  class="botao-lateral-notificacao"
-  @click="requestNotificationPermission"
->
-  <q-icon name="notifications" size="24px" />
-</div>
+    <!-- Banner inicial de notificação -->
+    <div
+      v-if="showBanner && !notificationsEnabled"
+      class="notificacao-banner"
+      @click="requestNotificationPermission"
+    >
+      <q-icon name="notifications" size="20px" class="q-mr-sm" />
+      <span>Ative as notificações para receber novidades!</span>
+    </div>
 
+    <!-- Botão fixo lateral -->
+    <div
+      v-else-if="!notificationsEnabled"
+      class="botao-lateral-notificacao"
+      @click="requestNotificationPermission"
+    >
+      <q-icon name="notifications" size="24px" />
+    </div>
   </footer>
 </template>
 
 <script>
+import ChatFloat from "./ChatFloat.vue";
+
 export default {
   name: "FAQPage",
-   data() {
+  components: {
+    ChatFloat,
+  },
+  data() {
     return {
       showBanner: true,
       notificationsEnabled: false,
@@ -98,67 +106,66 @@ export default {
   },
   mounted() {
     // já verifica no início se as notificações estão ativas
-  if (Notification.permission === "granted") {
-    this.notificationsEnabled = true;
-    this.showBanner = false; // não mostra banner
-  } else {
-    // só mostra o banner inicial por 2s
-    setTimeout(() => {
-      this.showBanner = false;
-    }, 2000);
-  }
+    if (Notification.permission === "granted") {
+      this.notificationsEnabled = true;
+      this.showBanner = false; // não mostra banner
+    } else {
+      // só mostra o banner inicial por 2s
+      setTimeout(() => {
+        this.showBanner = false;
+      }, 2000);
+    }
   },
   methods: {
     async requestNotificationPermission() {
-  try {
-    // Se já está permitido
-    if (Notification.permission === "granted") {
-      this.notificationsEnabled = true;
-      this.$q.notify({
-        type: "positive",
-        message: "Notificações já estavam ativadas!",
-      });
-      return;
-    }
+      try {
+        // Se já está permitido
+        if (Notification.permission === "granted") {
+          this.notificationsEnabled = true;
+          this.$q.notify({
+            type: "positive",
+            message: "Notificações já estavam ativadas!",
+          });
+          return;
+        }
 
-    // Se ainda não decidiu, o navegador vai mostrar o diálogo
-    if (Notification.permission === "default") {
-      const permission = await Notification.requestPermission();
+        // Se ainda não decidiu, o navegador vai mostrar o diálogo
+        if (Notification.permission === "default") {
+          const permission = await Notification.requestPermission();
 
-      if (permission === "granted") {
-        this.notificationsEnabled = true;
+          if (permission === "granted") {
+            this.notificationsEnabled = true;
+            this.$q.notify({
+              type: "positive",
+              message: "Notificações ativadas com sucesso!",
+            });
+          } else {
+            this.$q.notify({
+              type: "warning",
+              message: "Você recusou as notificações.",
+            });
+          }
+          return;
+        }
+
+        // Se estiver bloqueado, não dá para abrir o diálogo de novo
+        if (Notification.permission === "denied") {
+          this.$q.notify({
+            type: "negative",
+            message:
+              "As notificações estão bloqueadas no navegador. Para ativar, libere manualmente nas configurações do site.",
+          });
+        }
+      } catch (err) {
+        console.error("Erro ao ativar notificações:", err);
         this.$q.notify({
-          type: "positive",
-          message: "Notificações ativadas com sucesso!",
-        });
-      } else {
-        this.$q.notify({
-          type: "warning",
-          message: "Você recusou as notificações.",
+          type: "negative",
+          message: "Erro ao ativar notificações.",
         });
       }
-      return;
-    }
-
-    // Se estiver bloqueado, não dá para abrir o diálogo de novo
-    if (Notification.permission === "denied") {
-      this.$q.notify({
-        type: "negative",
-        message:
-          "As notificações estão bloqueadas no navegador. Para ativar, libere manualmente nas configurações do site.",
-      });
-    }
-  } catch (err) {
-    console.error("Erro ao ativar notificações:", err);
-    this.$q.notify({
-      type: "negative",
-      message: "Erro ao ativar notificações.",
-    });
-  }
-}
-,
+    },
     contactSupport() {
-      fbq('trackCustom', 'ContatoViaWhatsApp');
+      fbq("trackCustom", "ContatoViaWhatsApp");
       // Adicione a lógica para redirecionar ao WhatsApp
       window.open("https://wa.me/258873703909", "_blank");
     },
@@ -172,6 +179,7 @@ export default {
   },
 };
 </script>
+
 <style>
 .notificacao-banner {
   position: fixed;
@@ -187,7 +195,7 @@ export default {
   gap: 8px;
   font-size: 14px;
   cursor: pointer;
-  z-index: 9999;
+  z-index: 9997;
   animation: slideIn 0.5s ease;
 }
 
@@ -201,7 +209,7 @@ export default {
   border-radius: 8px 0 0 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  z-index: 9999;
+  z-index: 9997;
   animation: pulsar 2s infinite ease-in-out;
 }
 
@@ -262,6 +270,7 @@ export default {
   text-align: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   cursor: pointer;
+  z-index: 9998;
 }
 
 /* Estilo futurista avançado para o KLC Market com fundo claro */
@@ -400,6 +409,11 @@ h4 {
   .footer-top .contact-col,
   .footer-top .social-col {
     margin-bottom: 0px;
+  }
+
+  .botao-lateral {
+    padding: 8px 4px;
+    font-size: 12px;
   }
 }
 </style>
