@@ -1,592 +1,535 @@
 <template>
-  <div class="ver-page" style="background-color: #f2f2f2; height: 100vh">
-    <!-- heider -->
-    <q-toolbar
-      style="z-index: 99; border-bottom: 1px solid rgba(0, 0, 0, 0.1)"
-      class="bg-white q-pt-md q-pb-md"
-    >
+  <q-layout view="hHh Lpr lFf">
+    <!-- Header Customizado -->
+    <HeaderC />
+    
+    <!-- Botão Voltar FIXO no topo -->
+    <div class="back-button-fixed">
       <q-btn
         flat
         round
         dense
         size="md"
         icon="arrow_back"
-        class="q-mr-sm"
+        class="back-btn"
         @click="voltar"
-      ></q-btn>
-      <div style="flex: 1; text-align: center">
-        <q-toolbar-title
-          >Detalhes do Pedido: Cod: #{{ form.id }}
-        </q-toolbar-title>
-      </div>
+      />
+    </div>
 
-      <div style="width: 56px"></div>
-      <div v-if="form.tipo == 'PEDIDO'" class="pedido">
-        <div class="row q-my-auto text-center q-mr-md text-bold">
-          <span v-if="form.status == 'PUBLICO'" class="text-primary" label=""
-            >Publico
-          </span>
-          <span v-if="form.status == 'CANCELADO_C'" class="text-orange"
-            >Voce Cancelou
-          </span>
-          <span v-if="form.status == 'FALHA'" class="text-red" color="red">
-            O vendedor cancelou
-          </span>
-          <span v-if="form.status == 'CANCELADO_A'" class="text-orange"
-            >Cancelado
-          </span>
-          <span v-if="form.status == 'RECEBIDO'" class="text-primary"
-            >Pendente
-          </span>
-          <span v-if="form.status == 'ENTREGUE'" class="text-green"
-            >Entregue
-          </span>
+    <q-page-container>
+      <q-page class="ver-page">
+        <!-- Loading -->
+        <div v-if="carregando" class="skeleton-container q-pa-md">
+          <q-card class="skeleton-card q-mb-md">
+            <q-card-section>
+              <q-skeleton type="text" width="60%" />
+              <q-skeleton type="text" width="40%" class="q-mt-sm" />
+            </q-card-section>
+          </q-card>
+          
+          <q-card class="skeleton-card q-mb-md">
+            <q-card-section>
+              <div class="row">
+                <div v-for="i in 4" :key="i" class="col-3">
+                  <q-skeleton type="circle" size="40px" class="q-mx-auto" />
+                  <q-skeleton type="text" width="80%" class="q-mt-sm q-mx-auto" />
+                </div>
+              </div>
+            </q-card-section>
+          </q-card>
         </div>
 
-        <!-- Cancelar -->
-        <q-btn
-          v-if="form.status == 'RECEBIDO' && !form.aprovado"
-          :disable="registering"
-          style="
-            background-color: #f25c05;
-            color: white;
-            position: fixed;
-            bottom: 13px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999; /* Garantir que esteja acima de outros elementos */
-          "
-          label="Cancelar"
-          @click="confirmAction('CANCELADO_C')"
-        >
-          <q-spinner-hourglass v-if="registering" color="white" size="24px" />
-        </q-btn>
-
-        <!-- Modal de Confirmação -->
-        <q-dialog v-model="showConfirm">
-          <q-card>
-            <q-card-section class="row items-center">
-              <q-icon name="warning" color="warning" size="24px" />
-              <span class="q-ml-sm">Tem certeza que deseja continuar?</span>
-            </q-card-section>
-
-            <q-card-actions align="right">
-              <q-btn flat label="Cancelar" color="red" v-close-popup />
-              <q-btn
-                flat
-                label="Confirmar"
-                color="green"
-                @click="confirmClick"
-              />
-            </q-card-actions>
-          </q-card>
-        </q-dialog>
-        <!--
-          <q-badge
-            v-if="form.status == 'CANCELADO'"
-            class="text-bold"
-            style="height: 40px"
-            transparent
-            align="middle"
-            color="red"
-          >
-            Você Cancelou
-          </q-badge>
-
-
-  <q-badge
-            v-if="form.status == 'ENTREGUE'"
-            class="text-bold"
-            style="height: 40px"
-            transparent
-            align="middle"
-            color="green"
-          >
-            Entregue
-          </q-badge>
-
-
-          <q-badge
-            v-if="form.status == 'CANCELADO_E'"
-            class="text-bold"
-            style="height: 40px"
-            transparent
-            align="middle"
-            color="red"
-          >
-            O Entregador Cancelou
-          </q-badge> -->
-      </div>
-    </q-toolbar>
-
-    <!--
-    <LMap
-      style="background-color: #f2f2f2; margin-top: 60px"
-      v-if="!carregando && form.id && false"
-      ref="mapPage"
-      :markers="markers"
-      :mapHeight="mapHeight"
-    /> -->
-
-    <div
-      v-if="!carregando && form.id"
-      class="full-width lex flex-star1 q-pl-xl q-pr-xl q-pb-xl"
-    >
-      <q-item>
-        <q-item-section side>
-          <q-avatar icon="card_giftcard" rounded size="80px"></q-avatar>
-        </q-item-section>
-        <q-item-section>
-          <q-item-label>{{ formatarDataHora(form.created_at) }}</q-item-label>
-          <q-item-label caption>{{
-            formatarData(form.created_at)
-          }}</q-item-label>
-        </q-item-section>
-        <q-item-section v-if="form.tipo == 'PACOTE'" side
-          >{{ form.valor }} MT</q-item-section
-        >
-        <q-item-section v-if="form.tipo == 'PEDIDO'" side
-          >{{ form.total }} MT</q-item-section
-        >
-      </q-item>
-
-      <q-badge
-        v-if="form.status == 'RECEBIDO' "
-        outline
-        color="primary"
-        label="Pendente"
-      />
-
-      <q-timeline color="secondary">
-        <q-timeline-entry
-          :title="form.empresa?.nome"
-          subtitle="Origem"
-          icon="my_location"
-        >
-          <div v-if="form.hora_de_levantamento">
-            Hora De Levantamento:
-            {{ formatarDataHora(form.horaDeLevantamento) }}
+        <!-- Conteúdo Principal -->
+        <div v-else>
+          <!-- Status do Pedido -->
+          <div class="order-status-section q-pa-md">
+            <q-badge 
+              :color="getStatusColor(form.status)" 
+              class="status-badge q-px-md q-py-xs"
+              rounded
+            >
+              {{ getStatusText(form.status) }}
+            </q-badge>
           </div>
 
-          <div v-if="isDelivering(form.status)" class="text-subtitle text-bold">
-            <q-icon name="person" size="20px" />
-            {{ form.sender.name + " " + form.sender.apelido }}
-          </div>
-
-          <!-- Botões para Chamada e SMS -->
-          <div v-if="isDelivering(form.status)" class="button-group q-mt-md">
-            <q-btn
-              @click="makeCall(form.sender.telefone)"
-              icon="phone"
-              color="positive"
-            />
-            <q-btn
-              @click="sendSMS(form.sender.telefone)"
-              icon="message"
-              color="secondary"
-              class="q-ml-md"
-            />
-          </div>
-        </q-timeline-entry>
-
-        <q-timeline-entry :title="form.destino" subtitle="Destino" icon="place">
-          <div v-if="form.hora_de_entrega">
-            Hora de entrega: {{ formatarDataHora(form.horaDeEntrega) }}
-          </div>
-
-          <div v-if="isDelivering(form.status)" class="text-subtitle text-bold">
-            <q-icon name="person" size="20px" />
-            {{ form.receiver.name + " " + form.receiver.apelido }}
-          </div>
-          <!-- Botões para Chamada e SMS -->
-          <div v-if="isDelivering(form.status)" class="button-group q-mt-md">
-            <q-btn
-              @click="makeCall(form.receiver.telefone)"
-              icon="phone"
-              color="positive"
-            />
-            <q-btn
-              @click="sendSMS(form.receiver.telefone)"
-              icon="message"
-              color="secondary"
-              class="q-ml-md"
-            />
-          </div>
-        </q-timeline-entry>
-      </q-timeline>
-
-      <q-card-section>
-        <div class="text-h6 text-bold">Detalhes do Pacote</div>
-        <div class="text-h61 text-bold">Items</div>
-      </q-card-section>
-
-      <!-- itens do pacote -->
-      <div v-for="(item, index) in form.items" :key="index" class="q-mb-md">
-        <q-item
-          clickable
-          v-ripple
-          class="rounded-borders"
-          :class="$q.dark.isActive ? 'bg-grey-9 text-white' : 'bg-grey-2'"
-        >
-          <q-item-section avatar>
-            <q-avatar rounded>
-              <div v-if="item.images.length > 0">
-                <img
-                  :src="item.images[0].preview"
-                  alt="Pré-visualização da imagem"
-                  style="max-width: 100px; max-height: 100px"
-                />
-              </div>
-            </q-avatar>
-          </q-item-section>
-
-          <q-item-section>
-            <q-item-label>{{ item.descricao }}</q-item-label>
-          </q-item-section>
-
-          <q-item-section side class="row">
-            <span>Qtd: {{ item.quantidade }}</span>
-          </q-item-section>
-
-          <!-- Botão de Chat -->
-          <q-item-section>
-            <q-btn
-              :label="'enviar menssagem'"
-              icon="chat"
-              color="accent"
-              @click="openChat"
-              class="full-width q-shadow-2"
-              style="border-radius: 20px; height: 50px"
-            />
-          </q-item-section>
-          <!-- <q-btn style="color: #f27c38; right: -25px" flat icon="close" /> -->
-        </q-item>
-      </div>
-
-      <div v-if="form.items && form.items.length == 0" class="text-subtitle">
-        Sem items
-      </div>
-
-      <!-- itens do pedido -->
-      <div
-        v-for="(item, index) in form.itens_pedido"
-        :key="index"
-        class="q-mb-md"
-      >
-        <q-item class="rounded-borders">
-          <q-item-section avatar>
-            <q-avatar rounded>
-              <div v-if="item.produto.images.length > 0">
-                <img
-                  :src="getImageUrl(item.produto.images[0])"
-                  alt="Pré-visualização da imagem"
-                  style="max-width: 100px; max-height: 100px"
-                />
-              </div>
-            </q-avatar>
-          </q-item-section>
-
-          <q-item-section>
-            <span> {{ item.preco }} MZ</span>
-          </q-item-section>
-
-          <q-item-section side class="row">
-            <span>Qtd: {{ item.quantidade }}</span>
-          </q-item-section>
-
-          <q-item-section>
-            <div class="q-mt-sm">
-              <!-- Status Vendedor -->
-              <q-chip
-                v-if="user.scope === 'cliente' && item.aprovado_vendedor"
-                color="green"
-                text-color="white"
-                outline
-                label="Vendedor ✔️"
-                class="q-mb-xs"
-                style="transition: all 0.3s; cursor: default"
-              />
-              <q-chip
-                v-if="user.scope === 'cliente' && !item.aprovado_vendedor"
-                color="grey-5"
-                text-color="white"
-                outline
-                label="Vendedor ⏳"
-                class="q-mb-xs"
-                style="transition: all 0.3s; cursor: default"
-              />
-
-              <!-- Status Cliente -->
-              <q-chip
-                v-if="user.scope === 'empresa' && item.aprovado_cliente"
-                color="green"
-                text-color="white"
-                outline
-                label="Cliente ✔️"
-                class="q-mb-xs"
-                style="transition: all 0.3s; cursor: default"
-              />
-              <q-chip
-                v-if="user.scope === 'empresa' && !item.aprovado_cliente"
-                color="grey-5"
-                text-color="white"
-                outline
-                label="Cliente ⏳"
-                class="q-mb-xs"
-                style="transition: all 0.3s; cursor: default"
-              />
-
-              <!-- Chat -->
-              <q-badge
-                color="blue"
-                text-color="white"
-                class="q-pa-sm flex items-center cursor-pointer q-mb-xs shadow-hover"
-                style="
-                  border-radius: 25px;
-                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-                  transition: all 0.3s;
-                "
-                @mouseover="hover = true"
-                @mouseleave="hover = false"
-                @click="openChat(item.produto_id)"
-              >
-                <q-icon name="chat" size="20px" class="q-mr-sm" />
-                Falar com Vendedor
-              </q-badge>
-
-              <!-- Aprovar / Remover -->
-              <div class="q-mt-sm flex flex-wrap">
-                <q-badge
-                  v-if="user.scope === 'cliente' && !item.aprovado_cliente"
-                  color="green"
-                  text-color="white"
-                  label="Aprovar"
-                  class="q-mr-sm q-mb-sm shadow-hover"
-                  @click="aprovarCliente(item)"
-                  style="transition: all 0.3s; cursor: pointer"
-                />
-                <q-badge
-                  v-if="user.scope === 'cliente' && !item.aprovado_cliente"
-                  color="red"
-                  text-color="white"
-                  label="Remover"
-                  class="q-mr-sm q-mb-sm shadow-hover"
-                  @click="RemoverCliente(item)"
-                  style="transition: all 0.3s; cursor: pointer"
-                />
-
-                <q-badge
-                  v-if="user.scope === 'empresa' && !item.aprovado_vendedor"
-                  color="green"
-                  text-color="white"
-                  label="Aprovar"
-                  class="q-mr-sm q-mb-sm shadow-hover"
-                  @click="aprovarVendedor(item)"
-                  style="transition: all 0.3s; cursor: pointer"
-                />
-                <q-badge
-                  v-if="user.scope === 'empresa' && !item.aprovado_vendedor"
-                  color="red"
-                  text-color="white"
-                  label="Remover"
-                  class="q-mr-sm q-mb-sm shadow-hover"
-                  @click="RemoverVendedor(item)"
-                  style="transition: all 0.3s; cursor: pointer"
-                />
+          <!-- Status Tracker -->
+          <div class="status-container q-pa-md">
+            <div class="status-header q-mb-lg">
+              <div class="text-h6 text-weight-bold text-center">Acompanhe sua Entrega</div>
+              <div class="text-caption text-grey-7 text-center">
+                {{ getStatusDescription() }}
               </div>
             </div>
-          </q-item-section>
 
-          <!-- <q-btn style="color: #f27c38; right: -25px" flat icon="close" /> -->
-        </q-item>
-      </div>
+            <div class="status-tracker">
+              <div 
+                v-for="(fase, index) in statusFases" 
+                :key="fase.id"
+                class="status-step"
+                :class="{
+                  'completed': fase.completed,
+                  'current': isCurrentStep(fase, index),
+                  'future': !fase.completed && !isCurrentStep(fase, index)
+                }"
+              >
+                <div class="step-indicator">
+                  <div class="step-circle" :class="fase.color">
+                    <q-icon 
+                      v-if="fase.completed" 
+                      name="check" 
+                      size="14px" 
+                      color="white" 
+                      class="completed-icon"
+                    />
+                    <q-icon 
+                      v-else
+                      :name="fase.icon" 
+                      size="16px" 
+                      :class="getIconColor(fase, index)"
+                      class="step-icon"
+                    />
+                  </div>
+                  
+                  <div 
+                    v-if="index < statusFases.length - 1"
+                    class="step-connector"
+                    :class="{
+                      'completed': statusFases[index + 1]?.completed,
+                      'future': !statusFases[index + 1]?.completed
+                    }"
+                  ></div>
+                </div>
 
-      <div
-        v-if="form.itens_pedido && form.itens_pedido.length == 0"
-        class="text-subtitle"
-      >
-        Sem items
-      </div>
+                <div class="step-label">
+                  <div class="text-caption text-weight-medium">{{ fase.nome }}</div>
+                  <div v-if="isCurrentStep(fase, index)" class="current-indicator">
+                    <div class="pulse-dot" :class="fase.color"></div>
+                    <span class="text-caption" :class="`text-${fase.color}`">Atual</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-      <q-card-section>
-        <q-form>
-          <q-input
-            filled
-            v-model="form.nota"
-            label="Nota"
-            disable
-            type="textarea"
-            prepend-icon="edit"
-            class="q-mt-md"
-          />
+            <!-- Informações Adicionais -->
+            <div class="delivery-info q-mt-xl">
+              <q-card 
+                v-if="form.status === 'ENTREGANDO'" 
+                class="info-card bg-purple text-white"
+              >
+                <div class="row items-center q-pa-md">
+                  <q-icon name="directions_bike" size="28px" class="q-mr-md" />
+                  <div>
+                    <div class="text-weight-bold">Em rota de entrega</div>
+                    <div class="text-caption">Seu pedido está a caminho do destino</div>
+                  </div>
+                </div>
+              </q-card>
 
-          <q-input
-            v-if="form.tipo == 'PACOTE'"
-            filled
-            v-model="form.valor"
-            label="Valor"
-            disable
-            prepend-icon="edit"
-            class="q-mt-md"
-          />
-          <q-input
-            v-if="form.tipo == 'PEDIDO'"
-            filled
-            v-model="form.total"
-            label="Total"
-            disable
-            prepend-icon="edit"
-            class="q-mt-md"
-          />
-        </q-form>
-      </q-card-section>
+              <q-card 
+                v-else-if="form.status === 'RECEBIDO' || form.status === 'PUBLICO'" 
+                class="info-card bg-orange text-white"
+              >
+                <div class="row items-center q-pa-md">
+                  <q-icon name="inventory_2" size="28px" class="q-mr-md" />
+                  <div>
+                    <div class="text-weight-bold">Preparando seu pedido</div>
+                    <div class="text-caption">Estamos organizando todos os itens</div>
+                  </div>
+                </div>
+              </q-card>
 
-      <q-btn
-        v-if="form.status == 'PUBLICO' && user.scope == 'entregador'"
-        :disable="registering"
-        style="
-          background-color: #f25c05;
-          color: white;
-          position: fixed;
-          bottom: 13px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 9999; /* Garantir que esteja acima de outros elementos */
-        "
-        label="Começar a entregar!"
-        @click="handleClick"
-      >
-        <q-spinner-hourglass v-if="registering" color="white" size="24px" />
-      </q-btn>
+              <q-card 
+                v-else-if="form.status === 'DESPACHADO'" 
+                class="info-card bg-blue text-white"
+              >
+                <div class="row items-center q-pa-md">
+                  <q-icon name="local_shipping" size="28px" class="q-mr-md" />
+                  <div>
+                    <div class="text-weight-bold">Pedido despachado</div>
+                    <div class="text-caption">Seu pedido saiu para entrega</div>
+                  </div>
+                </div>
+              </q-card>
 
-      <q-btn
-        v-if="form.status == 'ENTREGANDO' && form.status == 'ENTREGANDO'"
-        :disable="registering"
-        style="
-          background-color: hsl(203, 75%, 54%);
-          color: white;
-          position: fixed;
-          bottom: 13px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 9999; /* Garantir que esteja acima de outros elementos */
-        "
-        label="Terminar entrega"
-        @click="handleClick2"
-      >
-        <q-spinner-hourglass v-if="registering" color="white" size="24px" />
-      </q-btn>
-
-      <q-badge
-        v-if="form.status == 'CANCELADO_C'"
-        class="text-bold"
-        style="height: 40px"
-        transparent
-        align="middle"
-        color="red"
-      >
-        Você Cancelou
-      </q-badge>
-
-      <q-badge
-        v-if="form.status == 'CANCELADO_E'"
-        class="text-bold"
-        style="height: 40px"
-        transparent
-        align="middle"
-        color="red"
-      >
-        O Entregador Cancelou
-      </q-badge>
-    </div>
-
-    <!-- skeleton -->
-    <div
-      style="background-color: #f2f2f2; margin-top: 60px"
-      v-if="carregando"
-      class="full-width lex flex-star1 q-pa-xl"
-    >
-      <q-item v-ripple>
-        <q-item-section side>
-          <q-skeleton type="circle" />
-        </q-item-section>
-        <q-item-section>
-          <q-skeleton type="text" width="40%" />
-          <q-skeleton type="text" width="60%" />
-        </q-item-section>
-        <q-skeleton type="text" width="20%" />
-      </q-item>
-
-      <q-timeline color="secondary">
-        <q-timeline-entry
-          title="Origem"
-          :subtitle="form.origem"
-          icon="my_location"
-        >
-          <div class="text-subtitle text-bold">
-            <q-skeleton type="text" width="60%" />
+              <q-card 
+                v-else-if="form.status === 'ENTREGUE'" 
+                class="info-card bg-green text-white"
+              >
+                <div class="row items-center q-pa-md">
+                  <q-icon name="check_circle" size="28px" class="q-mr-md" />
+                  <div>
+                    <div class="text-weight-bold">Pedido entregue!</div>
+                    <div class="text-caption">Obrigado por escolher nossos serviços</div>
+                  </div>
+                </div>
+              </q-card>
+            </div>
           </div>
-          <div>
-            Hora De Levantamento: <q-skeleton type="text" width="20%" />
+
+          <!-- Informações do Pedido -->
+          <div class="order-info-section q-pa-md">
+            <q-card class="info-card">
+              <q-card-section>
+                <div class="row items-center q-mb-md">
+                  <q-avatar icon="receipt" color="primary" text-color="white" />
+                  <div class="q-ml-md">
+                    <div class="text-h6 text-weight-bold">{{ formatarDataHora(form.created_at) }}</div>
+                    <div class="text-caption text-grey-7">{{ formatarData(form.created_at) }}</div>
+                  </div>
+                  <q-space />
+                  <div class="text-h6 text-weight-bold text-primary">
+                    {{ form.tipo == 'PACOTE' ? form.valor : form.total }} MT
+                  </div>
+                </div>
+
+                <!-- Timeline de Localização -->
+                <div class="location-timeline q-mt-lg">
+                  <div class="location-item">
+                    <div class="location-icon bg-primary text-white">
+                      <q-icon name="my_location" size="16px" />
+                    </div>
+                    <div class="location-content">
+                      <div class="text-weight-bold">Origem</div>
+                      <div class="text-body1">{{ form.empresa?.nome }}</div>
+                      <div v-if="form.hora_de_levantamento" class="text-caption text-grey-7">
+                        Levantamento: {{ formatarDataHora(form.horaDeLevantamento) }}
+                      </div>
+                      
+                      <!-- Contato do Remetente -->
+                      <div v-if="isDelivering(form.status)" class="contact-section q-mt-sm">
+                        <div class="row items-center">
+                          <q-icon name="person" size="16px" class="q-mr-xs text-grey-7" />
+                          <div class="text-caption text-weight-medium">
+                            {{ form.sender.name + " " + form.sender.apelido }}
+                          </div>
+                        </div>
+                        <div class="contact-buttons q-mt-xs">
+                          <q-btn 
+                            round 
+                            dense 
+                            icon="phone" 
+                            color="green" 
+                            size="sm"
+                            @click="makeCall(form.sender.telefone)"
+                          />
+                          <q-btn 
+                            round 
+                            dense 
+                            icon="message" 
+                            color="blue" 
+                            size="sm"
+                            class="q-ml-xs"
+                            @click="sendSMS(form.sender.telefone)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="location-connector"></div>
+
+                  <div class="location-item">
+                    <div class="location-icon bg-secondary text-white">
+                      <q-icon name="place" size="16px" />
+                    </div>
+                    <div class="location-content">
+                      <div class="text-weight-bold">Destino</div>
+                      <div class="text-body1">{{ form.destino }}</div>
+                      <div v-if="form.hora_de_entrega" class="text-caption text-grey-7">
+                        Entrega: {{ formatarDataHora(form.horaDeEntrega) }}
+                      </div>
+                      
+                      <!-- Contato do Destinatário -->
+                      <div v-if="isDelivering(form.status)" class="contact-section q-mt-sm">
+                        <div class="row items-center">
+                          <q-icon name="person" size="16px" class="q-mr-xs text-grey-7" />
+                          <div class="text-caption text-weight-medium">
+                            {{ form.receiver.name + " " + form.receiver.apelido }}
+                          </div>
+                        </div>
+                        <div class="contact-buttons q-mt-xs">
+                          <q-btn 
+                            round 
+                            dense 
+                            icon="phone" 
+                            color="green" 
+                            size="sm"
+                            @click="makeCall(form.receiver.telefone)"
+                          />
+                          <q-btn 
+                            round 
+                            dense 
+                            icon="message" 
+                            color="blue" 
+                            size="sm"
+                            class="q-ml-xs"
+                            @click="sendSMS(form.receiver.telefone)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </q-card-section>
+            </q-card>
           </div>
-        </q-timeline-entry>
 
-        <q-timeline-entry title="Destino" :subtitle="form.destino" icon="place">
-          <div class="text-subtitle text-bold">
-            <q-skeleton type="text" width="60%" />
+          <!-- Itens do Pedido -->
+          <div class="items-section q-pa-md">
+            <q-card class="info-card">
+              <q-card-section>
+                <div class="text-h6 text-weight-bold q-mb-md">Itens do Pedido</div>
+                
+                <!-- Itens do Pacote -->
+                <div v-for="(item, index) in form.items" :key="'pkg-' + index" class="item-card q-mb-md">
+                  <div class="row items-center">
+                    <q-avatar rounded size="60px" class="q-mr-md">
+                      <img 
+                        v-if="item.images.length > 0"
+                        :src="item.images[0].preview"
+                        alt="Item image"
+                        class="item-image"
+                      />
+                      <q-icon v-else name="inventory_2" color="grey-5" />
+                    </q-avatar>
+                    
+                    <div class="col-grow">
+                      <div class="text-weight-medium">{{ item.descricao }}</div>
+                      <div class="row items-center q-mt-xs">
+                        <div class="text-caption text-grey-7">Qtd: {{ item.quantidade }}</div>
+                        <q-space />
+                        <div class="text-h6 text-primary">{{ item.preco }} MZ</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <q-btn
+                    label="Falar com Vendedor"
+                    icon="chat"
+                    color="accent"
+                    class="full-width q-mt-md"
+                    rounded
+                    @click="openChat"
+                  />
+                </div>
+
+                <!-- Itens do Pedido Normal -->
+                <div v-for="(item, index) in form.itens_pedido" :key="'ped-' + index" class="item-card q-mb-md">
+                  <div class="row items-center">
+                    <q-avatar rounded size="60px" class="q-mr-md">
+                      <img 
+                        v-if="item.produto.images.length > 0"
+                        :src="getImageUrl(item.produto.images[0])"
+                        alt="Product image"
+                        class="item-image"
+                      />
+                      <q-icon v-else name="shopping_bag" color="grey-5" />
+                    </q-avatar>
+                    
+                    <div class="col-grow">
+                      <div class="text-weight-medium">{{ item.produto.nome }}</div>
+                      <div class="row items-center q-mt-xs">
+                        <div class="text-caption text-grey-7">Qtd: {{ item.quantidade }}</div>
+                        <q-space />
+                        <div class="text-h6 text-primary">{{ item.preco }} MZ</div>
+                      </div>
+                      
+                      <!-- Status de Aprovação -->
+                      <div class="approval-status q-mt-sm">
+                        <q-chip
+                          v-if="user.scope === 'cliente'"
+                          :color="item.aprovado_vendedor ? 'green' : 'grey-5'"
+                          text-color="white"
+                          size="sm"
+                          icon="store"
+                          :label="item.aprovado_vendedor ? 'Vendedor ✔️' : 'Vendedor ⏳'"
+                        />
+                        <q-chip
+                          v-if="user.scope === 'empresa'"
+                          :color="item.aprovado_cliente ? 'green' : 'grey-5'"
+                          text-color="white"
+                          size="sm"
+                          icon="person"
+                          :label="item.aprovado_cliente ? 'Cliente ✔️' : 'Cliente ⏳'"
+                        />
+                      </div>
+                      
+                      <!-- Ações -->
+                      <div class="item-actions q-mt-sm">
+                        <q-btn
+                          icon="chat"
+                          color="blue"
+                          size="sm"
+                          round
+                          @click="openChat(item.produto_id)"
+                        />
+                        <q-btn
+                          v-if="user.scope === 'cliente' && !item.aprovado_cliente"
+                          icon="check"
+                          color="green"
+                          size="sm"
+                          round
+                          class="q-ml-xs"
+                          @click="aprovarCliente(item)"
+                        />
+                        <q-btn
+                          v-if="user.scope === 'cliente' && !item.aprovado_cliente"
+                          icon="close"
+                          color="red"
+                          size="sm"
+                          round
+                          class="q-ml-xs"
+                          @click="RemoverCliente(item)"
+                        />
+                        <q-btn
+                          v-if="user.scope === 'empresa' && !item.aprovado_vendedor"
+                          icon="check"
+                          color="green"
+                          size="sm"
+                          round
+                          class="q-ml-xs"
+                          @click="aprovarVendedor(item)"
+                        />
+                        <q-btn
+                          v-if="user.scope === 'empresa' && !item.aprovado_vendedor"
+                          icon="close"
+                          color="red"
+                          size="sm"
+                          round
+                          class="q-ml-xs"
+                          @click="RemoverVendedor(item)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="!form.items?.length && !form.itens_pedido?.length" class="text-center q-py-lg">
+                  <q-icon name="inventory_2" size="48px" color="grey-4" />
+                  <div class="text-h6 text-grey-6 q-mt-md">Nenhum item encontrado</div>
+                </div>
+              </q-card-section>
+            </q-card>
           </div>
-          <div>Hora de entrega: <q-skeleton type="text" width="20%" /></div>
-        </q-timeline-entry>
-      </q-timeline>
 
-      <q-card-section>
-        <div class="text-h6 text-bold">Detalhes do Pacote</div>
-        <div class="text-h61 text-bold">Items</div>
-      </q-card-section>
+          <!-- Detalhes Adicionais -->
+          <div class="details-section q-pa-md">
+            <q-card class="info-card">
+              <q-card-section>
+                <div class="text-h6 text-weight-bold q-mb-md">Detalhes Adicionais</div>
+                
+                <q-input
+                  filled
+                  v-model="form.nota"
+                  label="Nota"
+                  disable
+                  type="textarea"
+                  class="q-mb-md"
+                />
 
-      <div v-for="i in 3" :key="i" class="q-mb-md">
-        <q-skeleton type="QChip" width="100%" height="60px" />
-      </div>
+                <div class="row">
+                  <q-input
+                    v-if="form.tipo == 'PACOTE'"
+                    filled
+                    v-model="form.valor"
+                    label="Valor Total"
+                    disable
+                    class="col-12"
+                  />
+                  <q-input
+                    v-if="form.tipo == 'PEDIDO'"
+                    filled
+                    v-model="form.total"
+                    label="Total do Pedido"
+                    disable
+                    class="col-12"
+                  />
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
 
-      <q-card-section>
-        <q-form>
-          Nota
-          <q-skeleton
-            type="QChip"
-            width="100%"
-            height="200px"
-            class="q-mb-md"
-          />
-          Valor
-          <q-skeleton type="QChip" width="100%" height="40px" />
-        </q-form>
-      </q-card-section>
+          <!-- Botões de Ação -->
+          <div class="action-buttons q-pa-md">
+            <q-btn
+              v-if="form.status == 'PUBLICO' && user.scope == 'entregador'"
+              :disable="registering"
+              icon="local_shipping"
+              label="Começar a Entregar"
+              color="primary"
+              class="full-width action-btn"
+              size="lg"
+              rounded
+              @click="handleClick"
+            >
+              <q-spinner-hourglass v-if="registering" color="white" size="24px" />
+            </q-btn>
 
-      <div class="row justify-between">
-        <q-skeleton type="QChip" width="40%" height="60px" />
-        <q-skeleton type="QChip" width="40%" height="60px" />
-      </div>
-    </div>
+            <q-btn
+              v-if="form.status == 'ENTREGANDO' && user.scope == 'entregador'"
+              :disable="registering"
+              icon="check_circle"
+              label="Finalizar Entrega"
+              color="green"
+              class="full-width action-btn"
+              size="lg"
+              rounded
+              @click="handleClick2"
+            >
+              <q-spinner-hourglass v-if="registering" color="white" size="24px" />
+            </q-btn>
 
-    <div
-      v-if="!carregando && !form.id"
-      class="text-h6 text-bold full-width full-heigth text-center q-pa-xl"
-    >
-      Pacote nao encontrado!
-    </div>
-  </div>
+            <q-btn
+              v-if="form.status == 'RECEBIDO' && !form.aprovado && user.scope === 'cliente'"
+              :disable="registering"
+              icon="cancel"
+              label="Cancelar Pedido"
+              color="red"
+              class="full-width action-btn"
+              size="lg"
+              rounded
+              @click="confirmAction('CANCELADO_C')"
+            >
+              <q-spinner-hourglass v-if="registering" color="white" size="24px" />
+            </q-btn>
+          </div>
+
+          <!-- Modal de Confirmação -->
+          <q-dialog v-model="showConfirm" persistent>
+            <q-card class="dialog-card">
+              <q-card-section class="row items-center">
+                <q-avatar icon="warning" color="warning" text-color="white" />
+                <span class="q-ml-sm">Tem certeza que deseja cancelar este pedido?</span>
+              </q-card-section>
+
+              <q-card-actions align="right">
+                <q-btn flat label="Voltar" color="grey" v-close-popup />
+                <q-btn flat label="Confirmar" color="red" @click="confirmClick" />
+              </q-card-actions>
+            </q-card>
+          </q-dialog>
+        </div>
+
+        
+      </q-page>
+    </q-page-container>
+    <!-- Footer Customizado -->
+        <FooterC />
+  </q-layout>
 </template>
 
 <script>
 import { ref } from "vue";
-import LMap from "../../components/LMap.vue";
 import apiMethods from "src/router/api.js";
 import store from "src/store/index.js";
+import HeaderC from "components/store/HeaderC.vue";
+import FooterC from "components/store/FooterC.vue";
 
 export default {
   name: "PackageFormPage",
   components: {
-    // LMap,
+    HeaderC,
+    FooterC
   },
   data() {
     return {
@@ -595,6 +538,40 @@ export default {
       nextStatus: null,
       markers: [],
       mapHeight: "200px",
+      statusFases: [
+        { 
+          id: 1, 
+          nome: 'Preparando', 
+          key: 'PREPARING', 
+          completed: false,
+          icon: 'inventory_2',
+          color: 'orange'
+        },
+        { 
+          id: 2, 
+          nome: 'Despachado', 
+          key: 'SHIPPED', 
+          completed: false,
+          icon: 'local_shipping',
+          color: 'blue'
+        },
+        { 
+          id: 3, 
+          nome: 'Em Entrega', 
+          key: 'DELIVERING', 
+          completed: false,
+          icon: 'directions_bike',
+          color: 'purple'
+        },
+        { 
+          id: 4, 
+          nome: 'Entregue', 
+          key: 'DELIVERED', 
+          completed: false,
+          icon: 'check_circle',
+          color: 'green'
+        }
+      ],
       form: {
         sender: {
           name: "",
@@ -625,8 +602,8 @@ export default {
         quantidade: "",
         images: [],
       },
-      serviceOptions: ["DELIVER_MAN", "TRACK"], // Example: service options
-      showItemsSection: false, // Example: flag to show/hide item section based on logic
+      serviceOptions: ["DELIVER_MAN", "TRACK"],
+      showItemsSection: false,
       carregando: true,
       registering: false,
       id: "",
@@ -638,73 +615,184 @@ export default {
       return store.state.user;
     },
   },
+  watch: {
+    'form.status': {
+      handler(newStatus) {
+        this.$nextTick(() => {
+          this.atualizarStatusFases();
+        });
+      },
+      immediate: true
+    }
+  },
   methods: {
+    atualizarStatusFases() {
+      const statusMap = {
+        'RECEBIDO': 'PREPARING',
+        'PUBLICO': 'PREPARING',
+        'DESPACHADO': 'SHIPPED',
+        'ENTREGANDO': 'DELIVERING',
+        'ENTREGUE': 'DELIVERED'
+      };
+
+      const currentStatusKey = statusMap[this.form.status] || 'PREPARING';
+      
+      this.statusFases.forEach(fase => {
+        fase.completed = false;
+      });
+
+      switch (currentStatusKey) {
+        case 'DELIVERED':
+          this.statusFases[3].completed = true;
+        case 'DELIVERING':
+          this.statusFases[2].completed = true;
+        case 'SHIPPED':
+          this.statusFases[1].completed = true;
+        case 'PREPARING':
+          this.statusFases[0].completed = true;
+          break;
+      }
+    },
+
+    isCurrentStep(fase, index) {
+      const currentIndex = this.statusFases.findIndex(f => f.completed === false);
+      return currentIndex === index;
+    },
+
+    getIconColor(fase, index) {
+      if (fase.completed) {
+        return 'text-white';
+      }
+      if (this.isCurrentStep(fase, index)) {
+        return `text-${fase.color}`;
+      }
+      return 'text-grey-5';
+    },
+
+    getStatusDescription() {
+      const statusTexts = {
+        'RECEBIDO': 'Seu pedido está sendo preparado com cuidado',
+        'PUBLICO': 'Aguardando entregador aceitar a entrega',
+        'DESPACHADO': 'Pedido despachado e a caminho do centro de distribuição',
+        'ENTREGANDO': 'Seu pedido está em rota de entrega!',
+        'ENTREGUE': 'Pedido entregue com sucesso! Obrigado pela preferência'
+      };
+      return statusTexts[this.form.status] || 'Acompanhe o status do seu pedido';
+    },
+
+    getStatusColor(status) {
+      const colors = {
+        'RECEBIDO': 'blue',
+        'PUBLICO': 'orange',
+        'DESPACHADO': 'purple',
+        'ENTREGANDO': 'primary',
+        'ENTREGUE': 'green',
+        'CANCELADO_C': 'red',
+        'CANCELADO_A': 'red',
+        'FALHA': 'red'
+      };
+      return colors[status] || 'grey';
+    },
+
+    getStatusText(status) {
+      const texts = {
+        'RECEBIDO': 'Pendente',
+        'PUBLICO': 'Público',
+        'DESPACHADO': 'Despachado',
+        'ENTREGANDO': 'Em Entrega',
+        'ENTREGUE': 'Entregue',
+        'CANCELADO_C': 'Você Cancelou',
+        'CANCELADO_A': 'Cancelado',
+        'FALHA': 'O vendedor cancelou'
+      };
+      return texts[status] || status;
+    },
+
     async aprovarCliente(item) {
-    try {
-      const response =   await apiMethods.aprovarItemCliente(item.id, true);
-      item.aprovado_cliente = true;
-      this.$q.notify({ type: "positive", message: response.data.message });
-    } catch (error) {
-      this.$q.notify({ type: "negative", message: "Erro ao aprovar item" });
-    }
-  },
+      try {
+        const response = await apiMethods.aprovarItemCliente(item.id, true);
+        item.aprovado_cliente = true;
+        this.$q.notify({ 
+          type: "positive", 
+          message: "Item aprovado com sucesso!",
+          position: "top"
+        });
+      } catch (error) {
+        this.$q.notify({ 
+          type: "negative", 
+          message: "Erro ao aprovar item",
+          position: "top"
+        });
+      }
+    },
 
-  async reprovarCliente(item) {
-    try {
-      const response =  await apiMethods.aprovarItemCliente(item.id, false);
-      item.aprovado_cliente = false;
-      this.$q.notify({ type: "warning", message: response.data.message });
-    } catch (error) {
-      this.$q.notify({ type: "negative", message: "Erro ao reprovar item" });
-    }
-  },
-  async aprovarVendedor(item) {
-    try {
-      const response = await apiMethods.aprovarItemVendedor(item.id, true);
-      item.aprovado_vendedor = true;
-      this.$q.notify({
-        type: "positive",
-        message: response.data.message,
-      });
-    } catch (error) {
-      this.$q.notify({
-        type: "negative",
-        message: "Erro ao aprovar item",
-      });
-    }
-  },
+    async RemoverCliente(item) {
+      try {
+        const response = await apiMethods.aprovarItemCliente(item.id, false);
+        item.aprovado_cliente = false;
+        this.$q.notify({ 
+          type: "warning", 
+          message: "Item removido",
+          position: "top"
+        });
+      } catch (error) {
+        this.$q.notify({ 
+          type: "negative", 
+          message: "Erro ao remover item",
+          position: "top"
+        });
+      }
+    },
 
-  // Vendedor reprova item
-  async reprovarVendedor(item) {
-    try {
-      const response =  await apiMethods.aprovarItemVendedor(item.id, false);
-      item.aprovado_vendedor = false;
-      this.$q.notify({
-        type: "warning",
-        message: response.data.message,
-      });
-    } catch (error) {
-      this.$q.notify({
-        type: "negative",
-        message: "Erro ao reprovar item",
-      });
-    }
-  },
+    async aprovarVendedor(item) {
+      try {
+        const response = await apiMethods.aprovarItemVendedor(item.id, true);
+        item.aprovado_vendedor = true;
+        this.$q.notify({
+          type: "positive",
+          message: "Item aprovado com sucesso!",
+          position: "top"
+        });
+      } catch (error) {
+        this.$q.notify({
+          type: "negative",
+          message: "Erro ao aprovar item",
+          position: "top"
+        });
+      }
+    },
+
+    async RemoverVendedor(item) {
+      try {
+        const response = await apiMethods.aprovarItemVendedor(item.id, false);
+        item.aprovado_vendedor = false;
+        this.$q.notify({
+          type: "warning",
+          message: "Item removido",
+          position: "top"
+        });
+      } catch (error) {
+        this.$q.notify({
+          type: "negative",
+          message: "Erro ao remover item",
+          position: "top"
+        });
+      }
+    },
+
     handleClick() {
       this.clickCount += 1;
       if (this.clickCount === 3) {
         this.entregarPackage();
-        this.clickCount = 0; // Reseta o contador após chamar o método
+        this.clickCount = 0;
       }
     },
+
     openChat(produto_id) {
-      // Lógica para abrir a janela de chat
       const id = this.$route.params.id;
-      // console.log(this.form)
-      this.$router.push(
-        "/chat/" + this.form.empresa.user_id + "/" + produto_id
-      );
+      this.$router.push("/chat/" + this.form.empresa.user_id + "/" + produto_id);
     },
+
     voltar() {
       if (window.history.length > 1) {
         this.$router.go(-1);
@@ -712,20 +800,24 @@ export default {
         this.$router.push("/");
       }
     },
+
     handleClick2() {
       this.clickCount += 1;
       if (this.clickCount === 3) {
         this.atualizarStatusPedidoPersonalizado();
-        this.clickCount = 0; // Reseta o contador após chamar o método
+        this.clickCount = 0;
       }
     },
+
     getImageUrl(imageName) {
       return apiMethods.baseURL() + `/storage/product_images/${imageName.name}`;
     },
+
     getUser() {
       this.user = store.getters.user;
       return store.getters.user;
     },
+
     setUser(value) {
       store.commit("setUser", value);
     },
@@ -733,14 +825,14 @@ export default {
     formatarDataHora(data) {
       if (!data) return "";
       const date = new Date(data);
-      return `${date.getHours()}:${date.getMinutes()}`;
-      // return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}`;
+      return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
     },
+
     confirmAction(status) {
-      console.log("confirmAction");
       this.nextStatus = status;
       this.showConfirm = true;
     },
+
     confirmClick() {
       this.showConfirm = false;
       this.cancelarPackage();
@@ -748,7 +840,7 @@ export default {
 
     formatarData(data) {
       const dataObj = new Date(data);
-      return dataObj.toLocaleDateString();
+      return dataObj.toLocaleDateString('pt-BR');
     },
 
     async fetchPackage(id) {
@@ -770,11 +862,13 @@ export default {
 
         this.form = response.data;
 
-        // Converter strings de data em objetos Date
         this.form.horaDeLevantamento = new Date(this.form.hora_de_levantamento);
         this.form.horaDeEntrega = new Date(this.form.hora_de_entrega);
 
-        console.log(this.form);
+        this.$nextTick(() => {
+          this.atualizarStatusFases();
+        });
+
         this.carregando = false;
       } catch (error) {
         this.carregando = false;
@@ -784,6 +878,7 @@ export default {
           textColor: "white",
           icon: "report_problem",
           message: "Erro ao buscar pacote. Por favor, tente novamente.",
+          position: "top"
         });
       }
     },
@@ -791,42 +886,49 @@ export default {
     async atualizarStatusPedidoPersonalizado() {
       try {
         this.registering = true;
-        // console.log(this.id);
         const response = await apiMethods.atualizarStatusPedidoPersonalizado(
           this.id,
           { status: "ENTREGUE" }
         );
         this.form = response.data;
 
-        // Converter strings de data em objetos Date
         this.form.horaDeLevantamento = new Date(this.form.hora_de_entrega);
         this.form.horaDeEntrega = new Date(this.form.hora_de_entrega);
-        // console.log(response.data);
+        
         this.registering = false;
+        this.$q.notify({
+          type: "positive",
+          message: "Entrega finalizada com sucesso!",
+          position: "top"
+        });
       } catch (error) {
         this.registering = false;
-        console.error("Erro ao cancelar pacote:", error);
+        console.error("Erro ao finalizar entrega:", error);
         this.$q.notify({
           color: "red",
           textColor: "white",
           icon: "report_problem",
-          message: "Erro ao cancelar pacote. Por favor, tente novamente.",
+          message: "Erro ao finalizar entrega. Por favor, tente novamente.",
+          position: "top"
         });
       }
     },
+
     async cancelarPackage() {
       try {
         this.registering = true;
-        // console.log("YUIOUYTRTYUI");
-        // return
         const response = await apiMethods.cancelarPedido(this.id);
         this.form = response.data;
 
-        // Converter strings de data em objetos Date
         this.form.horaDeLevantamento = new Date(this.form.hora_de_entrega);
         this.form.horaDeEntrega = new Date(this.form.hora_de_entrega);
-        // console.log(response.data);
+        
         this.registering = false;
+        this.$q.notify({
+          type: "positive",
+          message: "Pedido cancelado com sucesso!",
+          position: "top"
+        });
       } catch (error) {
         this.registering = false;
         console.error("Erro ao cancelar pacote:", error);
@@ -834,7 +936,8 @@ export default {
           color: "red",
           textColor: "white",
           icon: "report_problem",
-          message: "Erro ao cancelar pacote. Por favor, tente novamente.",
+          message: "Erro ao cancelar pedido. Por favor, tente novamente.",
+          position: "top"
         });
       }
     },
@@ -846,7 +949,7 @@ export default {
         this.$q.notify({
           message: "Número de telefone não disponível",
           type: "negative",
-          position: "top",
+          position: "top"
         });
       }
     },
@@ -858,12 +961,14 @@ export default {
         this.$q.notify({
           message: "Número de telefone não disponível",
           type: "negative",
-          position: "top",
+          position: "top"
         });
       }
     },
 
     isDelivering(status) {
+      if (!this.user || !this.user.entregadores) return false;
+      
       return (
         status != "CANCELADO_C" &&
         status != "CANCELADO_A" &&
@@ -876,34 +981,430 @@ export default {
   beforeRouteEnter(to, from, next) {
     next(async (vm) => {
       const { id } = to.params;
-      // this.id=id;
-
       await vm.fetchPackage(id);
     });
   },
 };
 </script>
 
-<style>
-style > .q-timeline__title {
-  margin-top: 0;
-  margin-bottom: 16px;
-}
-
+<style scoped>
 .ver-page {
-  animation: slide-up 0.5s ease-out;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  min-height: 100vh;
 }
 
-@keyframes slide-up {
+/* Botão Voltar FIXO */
+.back-button-fixed {
+  position: fixed;
+  top: 70px;
+  left: 16px;
+  z-index: 1000;
+}
+
+.back-btn {
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  color: #333;
+}
+
+.status-container {
+  background: white;
+  border-radius: 20px;
+  margin: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.status-header {
+  text-align: center;
+}
+
+.order-status-section {
+  text-align: center;
+}
+
+.status-badge {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-tracker {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 12px;
+}
+
+.status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.step-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 3px solid #e0e0e0;
+  background: white;
+  z-index: 2;
+  position: relative;
+}
+
+.step-icon {
+  transition: all 0.3s ease;
+}
+
+.completed-icon {
+  animation: bounceIn 0.6s ease;
+}
+
+.step-connector {
+  flex: 1;
+  height: 4px;
+  background: #e0e0e0;
+  margin: 0 8px;
+  border-radius: 2px;
+  transition: all 0.4s ease;
+}
+
+.step-circle.orange {
+  border-color: #ff9800;
+}
+
+.step-circle.blue {
+  border-color: #2196f3;
+}
+
+.step-circle.purple {
+  border-color: #9c27b0;
+}
+
+.step-circle.green {
+  border-color: #4caf50;
+}
+
+.status-step.completed .step-circle {
+  background: #bd6513;
+  border-color: #bd6513;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(189, 101, 19, 0.3);
+}
+
+.status-step.completed .step-circle.orange {
+  background: #ff9800;
+  border-color: #ff9800;
+}
+
+.status-step.completed .step-circle.blue {
+  background: #2196f3;
+  border-color: #2196f3;
+}
+
+.status-step.completed .step-circle.purple {
+  background: #9c27b0;
+  border-color: #9c27b0;
+}
+
+.status-step.completed .step-circle.green {
+  background: #4caf50;
+  border-color: #4caf50;
+}
+
+.status-step.current .step-circle {
+  background: white;
+  transform: scale(1.15);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.status-step.current .step-circle .step-icon {
+  animation: pulse-icon 2s infinite;
+}
+
+.status-step.future .step-circle {
+  background: white;
+  border-color: #e0e0e0;
+}
+
+.status-step.completed .step-connector {
+  background: #bd6513;
+}
+
+.step-label {
+  margin-top: 12px;
+  text-align: center;
+  min-height: 48px;
+  width: 100%;
+}
+
+.current-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 6px;
+  animation: fadeIn 0.5s ease;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: pulse 1.5s infinite;
+}
+
+.pulse-dot.orange {
+  background: #ff9800;
+}
+
+.pulse-dot.blue {
+  background: #2196f3;
+}
+
+.pulse-dot.purple {
+  background: #9c27b0;
+}
+
+.pulse-dot.green {
+  background: #4caf50;
+}
+
+.info-card {
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  border: none;
+}
+
+.location-timeline {
+  position: relative;
+  padding: 20px 0;
+}
+
+.location-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.location-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.location-content {
+  flex: 1;
+}
+
+.location-connector {
+  width: 2px;
+  height: 20px;
+  background: #e0e0e0;
+  margin-left: 15px;
+  margin-bottom: 20px;
+}
+
+.contact-section {
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #bd6513;
+}
+
+.contact-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.item-card {
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.item-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.approval-status {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-buttons {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding-top: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid #e0e0e0;
+}
+
+.action-btn {
+  height: 56px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.dialog-card {
+  border-radius: 16px;
+  max-width: 400px;
+  width: 90vw;
+}
+
+.skeleton-container {
+  padding-top: 60px;
+}
+
+.skeleton-card {
+  border-radius: 16px;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(0, 0, 0, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+@keyframes pulse-icon {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
   from {
-    transform: translateY(100%);
+    opacity: 0;
   }
   to {
-    transform: translateY(0);
+    opacity: 1;
   }
 }
-.shadow-hover:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+
+@media (max-width: 480px) {
+  .back-button-fixed {
+    top: 60px;
+    left: 12px;
+  }
+  
+  .status-tracker {
+    padding: 0 8px;
+  }
+  
+  .step-circle {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .step-icon {
+    size: 14px;
+  }
+  
+  .step-label .text-caption {
+    font-size: 11px;
+  }
+  
+  .status-container,
+  .order-info-section,
+  .items-section,
+  .details-section {
+    margin: 8px;
+  }
+}
+
+@media (min-width: 768px) {
+  .q-page-container {
+    max-width: 768px;
+    margin: 0 auto;
+  }
+  
+  .status-container,
+  .order-info-section,
+  .items-section,
+  .details-section {
+    margin: 16px auto;
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .q-page-container {
+    max-width: 900px;
+  }
+  
+  .status-container,
+  .order-info-section,
+  .items-section,
+  .details-section {
+    max-width: 850px;
+  }
 }
 </style>
