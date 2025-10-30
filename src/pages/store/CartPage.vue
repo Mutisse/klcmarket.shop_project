@@ -1,139 +1,353 @@
 <template>
-  <!-- header -->
-  <div>
-    <q-toolbar
-      style="
-        position: fixed;
-        top: 0px;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        z-index: 99;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-      "
-      class="bg-white q-pt-md q-pb-md"
-    >
-      <q-btn
-        flat
-        round
-        dense
-        size="md"
-        icon="arrow_back"
-        class="q-mr-sm"
-        @click="voltar"
-      ></q-btn>
-      <div style="flex: 1; text-align: center">
-        <q-toolbar-title> Carrinho </q-toolbar-title>
-      </div>
-      <div style="width: 56px"></div>
-      <!-- Placeholder to balance the space -->
-    </q-toolbar>
-  </div>
-
-  <div class="q-pa-md" style="margin-top: 102px; margin-bottom: 102px">
-    <!-- 404 -->
-    <div
-      v-if="cartItems.length == 0"
-      class="text-bold text-subtitle1 text-grey-6"
-    >
-      Carrinho está vazio, adicione produtos para continuar a compra.
-    </div>
-
-    <!-- items -->
-    <q-list v-if="cartItems.length > 0" bordered padding class="cart-list">
-      <q-item v-for="item in cartItems" :key="item.id" class="q-mb-md">
-        <div v-if="item.quantity!=0" class="div">
-
-        </div>
-        <q-item-section avatar>
-          <q-img
-            v-if="item.images.length > 0"
-            :src="getImageUrl(item.images[0])"
-            class="cart-item-image bg-transparent"
-            style="
-              object-fit: contain;
-              overflow: hidden;
-              vertical-align: middle;
-              border-radius: 22px;
-              border: 1px solid black;
-              flex: 1 1 0%;
-              padding: 8px;
-            "
-          ></q-img>
-        </q-item-section>
-        <q-item-section>
-          <q-item-label>{{ item.name }}</q-item-label>
-          <q-item-label caption
-            >{{ item.price * item.quantity }} MZN</q-item-label
-          >
-        </q-item-section>
-        <q-item-section side>
-          <q-btn
-            dense
-            flat
-            @click="removeItem(item.id)"
-            icon="close"
-            class="text-red"
-          ></q-btn>
-          <div class="quantity-controls">
-            <q-btn
-              dense
-              flat
-              @click="decreaseQuantity(item.id)"
-              icon="remove"
-              class="text-primary"
-            ></q-btn>
-            <span>{{ item.quantity }}</span>
-            <q-btn
-              dense
-              flat
-              @click="increaseQuantity(item.id)"
-              icon="add"
-              class="text-primary"
-            ></q-btn>
-          </div>
-        </q-item-section>
-      </q-item>
-    </q-list>
-
-    <!-- footer -->
-    <div
-      style="
-        position: fixed;
-        bottom: 0px;
-        left: 0;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        z-index: 99;
-      "
-    >
+  <!-- Versão Mobile (mantida igual) -->
+  <div v-if="$q.screen.lt.md">
+    <!-- header -->
+    <div>
       <q-toolbar
-        class="row justify-between q-pa-md bg-white"
-        style="width: 100%; border-top: 1px solid rgba(0, 0, 0, 0.1)"
+        style="
+          position: fixed;
+          top: 0px;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          z-index: 99;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        "
+        class="bg-white q-pt-md q-pb-md"
       >
-        <div class="summary-item row" style="margin-bottom: 0">
-          <div class="col-12">Total:</div>
-          <div class="total-price col-12">{{ totalPrice }} MZN</div>
-        </div>
-
         <q-btn
-          :disable="cartItems.length == 0"
-          style="
-            height: 70px;
-            padding: 9px;
-            border-radius: 1rem;
-            text-transform: none;
-          "
-          @click="InitiateCheckout"
+          flat
+          round
           dense
-          class="bg-green-6 text-white glowing-shadow-cancel"
-          label="Finalizar compra"
-        />
+          size="md"
+          icon="arrow_back"
+          class="q-mr-sm"
+          @click="voltar"
+        ></q-btn>
+        <div style="flex: 1; text-align: center">
+          <q-toolbar-title> Carrinho </q-toolbar-title>
+        </div>
+        <div style="width: 56px"></div>
+        <!-- Placeholder to balance the space -->
       </q-toolbar>
     </div>
+
+    <div class="q-pa-md" style="margin-top: 102px; margin-bottom: 102px">
+      <!-- 404 -->
+      <div
+        v-if="cartItems.length == 0"
+        class="text-bold text-subtitle1 text-grey-6"
+      >
+        Carrinho está vazio, adicione produtos para continuar a compra.
+      </div>
+
+      <!-- items -->
+      <q-list v-if="cartItems.length > 0" bordered padding class="cart-list">
+        <q-item v-for="item in cartItems" :key="item.id" class="q-mb-md">
+          <div v-if="item.quantity!=0" class="div">
+
+          </div>
+          <q-item-section avatar>
+            <q-img
+              v-if="item.images.length > 0"
+              :src="getImageUrl(item.images[0])"
+              class="cart-item-image bg-transparent"
+              style="
+                object-fit: contain;
+                overflow: hidden;
+                vertical-align: middle;
+                border-radius: 22px;
+                border: 1px solid black;
+                flex: 1 1 0%;
+                padding: 8px;
+              "
+            ></q-img>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ item.name }}</q-item-label>
+            <q-item-label caption
+              >{{ item.price * item.quantity }} MZN</q-item-label
+            >
+          </q-item-section>
+          <q-item-section side>
+            <q-btn
+              dense
+              flat
+              @click="removeItem(item.id)"
+              icon="close"
+              class="text-red"
+            ></q-btn>
+            <div class="quantity-controls">
+              <q-btn
+                dense
+                flat
+                @click="decreaseQuantity(item.id)"
+                icon="remove"
+                class="text-primary"
+              ></q-btn>
+              <span>{{ item.quantity }}</span>
+              <q-btn
+                dense
+                flat
+                @click="increaseQuantity(item.id)"
+                icon="add"
+                class="text-primary"
+              ></q-btn>
+            </div>
+          </q-item-section>
+        </q-item>
+      </q-list>
+
+      <!-- footer -->
+      <div
+        style="
+          position: fixed;
+          bottom: 0px;
+          left: 0;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          z-index: 99;
+        "
+      >
+        <q-toolbar
+          class="row justify-between q-pa-md bg-white"
+          style="width: 100%; border-top: 1px solid rgba(0, 0, 0, 0.1)"
+        >
+          <div class="summary-item row" style="margin-bottom: 0">
+            <div class="col-12">Total:</div>
+            <div class="total-price col-12">{{ totalPrice }} MZN</div>
+          </div>
+
+          <q-btn
+            :disable="cartItems.length == 0"
+            style="
+              height: 70px;
+              padding: 9px;
+              border-radius: 1rem;
+              text-transform: none;
+            "
+            @click="InitiateCheckout"
+            dense
+            class="bg-green-6 text-white glowing-shadow-cancel"
+            label="Finalizar compra"
+          />
+        </q-toolbar>
+      </div>
+    </div>
   </div>
 
+  <!-- Versão Desktop (CORRIGIDA - sem QLayout) -->
+  <div v-else class="desktop-cart-page">
+    <!-- Header Desktop Simples (sem QHeader) -->
+    <div class="desktop-header bg-white text-dark">
+      <q-toolbar class="q-px-xl">
+        <q-btn
+          flat
+          round
+          dense
+          icon="arrow_back"
+          class="q-mr-md"
+          @click="voltar"
+        />
+        <q-toolbar-title class="text-h5 text-weight-bold">
+          Meu Carrinho
+        </q-toolbar-title>
+        <div class="cart-stats">
+          <q-badge color="orange" rounded class="q-px-sm q-py-xs">
+            {{ totalItemsInCart }} items
+          </q-badge>
+        </div>
+      </q-toolbar>
+    </div>
+
+    <!-- Conteúdo Principal (sem QPage) -->
+    <div class="desktop-cart-content bg-grey-1">
+      <div class="row justify-center q-px-xl q-pt-xl">
+        <!-- Coluna dos Produtos -->
+        <div class="col-8 q-pr-lg">
+          <!-- Header da Lista -->
+          <div class="cart-section-header q-mb-md">
+            <div class="text-h6 text-weight-bold">Produtos no Carrinho</div>
+            <div class="text-caption text-grey-6">
+              {{ cartItems.length }} produto(s) selecionado(s)
+            </div>
+          </div>
+
+          <!-- Carrinho Vazio -->
+          <div
+            v-if="cartItems.length == 0"
+            class="empty-cart-desktop text-center q-pa-xl"
+          >
+            <q-icon name="shopping_cart" size="120px" color="grey-4" />
+            <div class="text-h6 text-grey-6 q-mt-md">
+              Seu carrinho está vazio
+            </div>
+            <div class="text-subtitle1 text-grey-5 q-mb-lg">
+              Adicione produtos para continuar com sua compra
+            </div>
+            <q-btn
+              color="orange"
+              label="Continuar Comprando"
+              @click="$router.push('/')"
+              unelevated
+              class="q-px-xl"
+            />
+          </div>
+
+          <!-- Lista de Produtos -->
+          <div v-else class="cart-items-desktop">
+            <q-card
+              v-for="item in cartItems"
+              :key="item.id"
+              class="cart-item-card q-mb-md"
+              flat
+              bordered
+            >
+              <div class="row items-center q-pa-md">
+                <!-- Imagem do Produto -->
+                <div class="col-auto">
+                  <q-img
+                    v-if="item.images.length > 0"
+                    :src="getImageUrl(item.images[0])"
+                    class="product-image-desktop"
+                    ratio="1"
+                    width="100px"
+                  />
+                  <q-img
+                    v-else
+                    src="~assets/default-product.png"
+                    class="product-image-desktop"
+                    ratio="1"
+                    width="100px"
+                  />
+                </div>
+
+                <!-- Informações do Produto -->
+                <div class="col q-px-md">
+                  <div class="text-h6 text-weight-medium product-name">
+                    {{ item.name }}
+                  </div>
+                  <div class="text-subtitle1 text-orange text-weight-bold">
+                    {{ (item.price * item.quantity).toFixed(2) }} MZN
+                  </div>
+                  <div class="text-caption text-grey-6">
+                    {{ item.price }} MZN por unidade
+                  </div>
+                </div>
+
+                <!-- Controles de Quantidade -->
+                <div class="col-auto">
+                  <div class="quantity-controls-desktop">
+                    <q-btn
+                      round
+                      dense
+                      flat
+                      icon="remove"
+                      :disable="item.quantity <= 1"
+                      @click="decreaseQuantity(item.id)"
+                      class="control-btn"
+                    />
+                    <div class="quantity-display">
+                      <span class="text-h6">{{ item.quantity }}</span>
+                    </div>
+                    <q-btn
+                      round
+                      dense
+                      flat
+                      icon="add"
+                      @click="increaseQuantity(item.id)"
+                      class="control-btn"
+                    />
+                  </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="col-auto q-pl-lg">
+                  <q-btn
+                    round
+                    flat
+                    icon="delete"
+                    color="red"
+                    @click="removeItem(item.id)"
+                    class="delete-btn"
+                  >
+                    <q-tooltip>Remover item</q-tooltip>
+                  </q-btn>
+                </div>
+              </div>
+            </q-card>
+          </div>
+        </div>
+
+        <!-- Coluna do Resumo -->
+        <div class="col-4">
+          <q-card class="summary-card sticky-summary" flat bordered>
+            <q-card-section class="bg-grey-2">
+              <div class="text-h6 text-weight-bold">Resumo do Pedido</div>
+            </q-card-section>
+
+            <q-card-section class="q-pt-none">
+              <!-- Debug Info -->
+              <div v-if="debugMode" class="debug-info q-pa-sm bg-yellow-1 rounded-borders q-mb-md">
+                <div class="text-caption text-weight-bold">Debug Info:</div>
+                <div class="text-caption">Cart Total: {{ storeCartTotal }}</div>
+                <div class="text-caption">Calculated Subtotal: {{ calculatedSubtotal }}</div>
+                <div class="text-caption">Items: {{ cartItems.length }}</div>
+              </div>
+
+              <!-- Itens -->
+              <div class="row justify-between items-center q-py-sm">
+                <div class="text-body1">Subtotal</div>
+                <div class="text-body1 text-weight-medium">
+                  {{ calculatedSubtotal.toFixed(2) }} MZN
+                </div>
+              </div>
+
+              <!-- Taxa de Entrega -->
+              <div class="row justify-between items-center q-py-sm">
+                <div>
+                  <div class="text-body1">Taxa de Entrega</div>
+                  <div class="text-caption text-grey-6">
+                    {{ form.deliveryOption === 'delivery' ? 'Entrega em domicílio' : 'Recolha no local' }}
+                  </div>
+                </div>
+                <div class="text-body1 text-weight-medium">
+                  {{ form.deliveryOption === 'delivery' ? deliveryFee + ' MZN' : 'Grátis' }}
+                </div>
+              </div>
+
+              <!-- Divisor -->
+              <q-separator class="q-my-md" />
+
+              <!-- Total -->
+              <div class="row justify-between items-center q-py-sm">
+                <div class="text-h6 text-weight-bold">Total</div>
+                <div class="text-h5 text-orange text-weight-bold">
+                  {{ calculatedTotalPrice.toFixed(2) }} MZN
+                </div>
+              </div>
+
+              <!-- Botão Finalizar -->
+              <q-btn
+                :disable="cartItems.length == 0"
+                @click="InitiateCheckout"
+                color="orange"
+                size="lg"
+                class="full-width q-mt-lg checkout-btn"
+                unelevated
+                label="Finalizar Compra"
+              />
+
+              
+            </q-card-section>
+          </q-card>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Checkout (mantido igual para ambas as versões) -->
   <q-dialog
     persistent
     maximized
@@ -379,7 +593,7 @@
               <q-item-label>Hoje</q-item-label>
               <q-item-label caption>agora</q-item-label>
             </q-item-section>
-            <q-item-section side>{{ totalPrice }} MZN</q-item-section>
+            <q-item-section side>{{ calculatedTotalPrice }} MZN</q-item-section>
           </q-item>
 
           <q-timeline color="secondary">
@@ -468,7 +682,7 @@
                 />
                 <q-input
                   filled
-                  v-model="totalPrice"
+                  v-model="calculatedTotalPrice"
                   label="Valor Total"
                   disable
                   prepend-icon="money"
@@ -532,36 +746,67 @@ export default {
       isProcessing: false,
       showProductModal: false,
       deliveryFee: 100, // Delivery fee in MZN
+      debugMode: true, // Set to false in production
     };
   },
   computed: {
-    totalPrice() {
-      let basePrice = store.getters.cartTotal;
+    // Debug info
+    storeCartTotal() {
+      return store.getters.cartTotal;
+    },
+    
+    // Cálculo manual do subtotal para garantir que está correto
+    calculatedSubtotal() {
+      if (!this.cartItems || this.cartItems.length === 0) return 0;
+      
+      const subtotal = this.cartItems.reduce((total, item) => {
+        const price = parseFloat(item.price) || 0;
+        const quantity = parseInt(item.quantity) || 0;
+        return total + (price * quantity);
+      }, 0);
+      
+      console.log('Calculated Subtotal:', subtotal, 'Items:', this.cartItems);
+      return subtotal;
+    },
+    
+    // Total calculado manualmente
+    calculatedTotalPrice() {
+      let basePrice = this.calculatedSubtotal;
+      // Só adiciona a taxa de entrega se for delivery
       if (this.form.deliveryOption === "delivery") {
         basePrice += this.deliveryFee;
       }
+      console.log('Calculated Total:', basePrice, 'Delivery Option:', this.form.deliveryOption);
       return basePrice;
     },
+    
+    // Mantendo compatibilidade com versão mobile
+    totalPrice() {
+      return this.calculatedTotalPrice;
+    },
+    
     totalItemsInCart() {
       return store.getters.totalItemsInCart;
     },
+    
     cartItems() {
       return store.getters.cart;
     },
+    
     user() {
       return store.state.user;
     },
   },
   created() {
     this.form.nome = this.user ? this.user.name : "";
+    console.log('Cart Items on created:', this.cartItems);
+    console.log('Store Cart Total:', this.storeCartTotal);
   },
   methods: {
     InitiateCheckout() {
       this.showProductModal = true;
       const contentIds = this.cartItems.map((item) => item.id);
-      const totalValue = this.cartItems.reduce((acc, item) => {
-        return acc + parseFloat(item.price) * item.quantity;
-      }, 0);
+      const totalValue = this.calculatedSubtotal;
       const totalItems = this.cartItems.reduce(
         (acc, item) => acc + item.quantity,
         0
@@ -574,12 +819,6 @@ export default {
         value: totalValue,
         currency: "MZN",
       });
-      //TODO:
-      //       fbq('track', 'AddPaymentInfo', {
-      //   content_ids: ['prod-123'],
-      //   value: 149.99,
-      //   currency: 'BRL'
-      // });
     },
     voltar() {
       if (window.history.length > 1) {
@@ -639,27 +878,25 @@ export default {
       this.decrementProductQuantity(id);
     },
     async submitForm() {
-      this.form.valor = this.totalPrice;
+      this.form.valor = this.calculatedTotalPrice;
       this.form.produtos = this.cartItems;
-      this.form.taxaDeEntrega = this.deliveryFee;
+      this.form.taxaDeEntrega = this.form.deliveryOption === "delivery" ? this.deliveryFee : 0;
       this.form.origem = "#"; // Represents the seller's location
       if (this.form.deliveryOption === "pickup") {
         this.form.destino = "Recolha no local";
         this.form.destinoLat = 0;
         this.form.destinoLong = 0;
       }
-      console.log(this.form);
+      console.log('Form data:', this.form);
       this.$q.loading.show({
         delay: 400, // ms
       });
       try {
         const response = await apiMethods.processarPedidos(this.form);
         this.products = response.data;
-console.log(response.data)
+
         const contentIds = this.cartItems.map((item) => item.id);
-        const totalValue = this.cartItems.reduce((acc, item) => {
-          return acc + parseFloat(item.price) * item.quantity;
-        }, 0);
+        const totalValue = this.calculatedSubtotal;
         const totalItems = this.cartItems.reduce(
           (acc, item) => acc + item.quantity,
           0
@@ -673,12 +910,10 @@ console.log(response.data)
           currency: "MZN",
         });
 
-
-
         store.commit("clearCart");
         this.$router.push("/c/show-packs");
       } catch (error) {
-        console.error("Erro ao processar pedido:", error.response.data);
+        console.error("Erro ao processar pedido:", error.response?.data || error);
         this.$q.notify({
           color: "red",
           textColor: "white",
@@ -697,7 +932,167 @@ console.log(response.data)
 };
 </script>
 
-<style>
+<style scoped>
+/* ===== ESTILOS PARA DESKTOP ===== */
+
+.desktop-cart-page {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.desktop-header {
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.desktop-cart-content {
+  min-height: calc(100vh - 64px);
+  padding-top: 0;
+}
+
+.cart-section-header {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
+}
+
+.empty-cart-desktop {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 40px;
+}
+
+.cart-item-card {
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e0e0e0;
+}
+
+.cart-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  border-color: #ff9800;
+}
+
+.product-image-desktop {
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.product-name {
+  color: #2c3e50;
+  line-height: 1.4;
+}
+
+.quantity-controls-desktop {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 25px;
+  padding: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.control-btn {
+  width: 36px;
+  height: 36px;
+  transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+  background: #ff9800;
+  color: white;
+}
+
+.quantity-display {
+  min-width: 40px;
+  text-align: center;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.delete-btn {
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: #ffebee;
+  transform: scale(1.1);
+}
+
+.summary-card {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.sticky-summary {
+  position: sticky;
+  top: 100px;
+}
+
+.checkout-btn {
+  height: 56px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.1em;
+  text-transform: none;
+  transition: all 0.3s ease;
+}
+
+.checkout-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+.checkout-btn:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
+}
+
+/* Debug info styles */
+.debug-info {
+  border: 1px solid #ffd54f;
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cart-item-card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsividade adicional para desktop */
+@media (min-width: 1440px) {
+  .desktop-cart-content .row.justify-center {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
+/* Efeitos de foco e interação */
+.control-btn:focus,
+.delete-btn:focus {
+  outline: 2px solid #ff9800;
+  outline-offset: 2px;
+}
+
+/* ===== ESTILOS EXISTENTES (MOBILE) ===== */
 .cart-page {
   background-color: #f9f9f9;
 }

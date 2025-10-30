@@ -646,7 +646,7 @@ export default {
   padding: 8px;
   background: #f5f5f5;
   border-radius: 8px;
-  border-left: 3px solid #bd6513;
+  border-left: 3px solid #e4bf9b;
 }
 
 .mobile-chat-layout .product-image {
@@ -731,11 +731,11 @@ export default {
 }
 
 .desktop-chat-layout .back-btn-desktop {
-  color: #bd6513 !important;
+  color: #e3ab76 !important;
 }
 
 .desktop-chat-layout .receiver-avatar-desktop {
-  background: #bd6513;
+  background: #eaa667e5;
   border: 3px solid #f0f0f0;
 }
 
@@ -795,7 +795,7 @@ export default {
 }
 
 .desktop-chat-layout .seller-avatar {
-  background: #bd6513;
+  background: #f0c8a3;
   margin: 0 auto 12px auto;
 }
 

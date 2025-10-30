@@ -4,9 +4,9 @@
 
     <div class="message-list-page">
       <!-- Título da Página -->
-      <div class="q-pb-md">
+      <div class="page-header">
         <q-toolbar class="bg-white">
-          <q-btn flat round icon="arrow_back" @click="goBack" />
+          <q-btn flat round icon="arrow_back" @click="goBack" class="back-btn" />
 
           <div class="q-ml-md">
             <div class="text-h6">Suas Conversas</div>
@@ -14,243 +14,189 @@
         </q-toolbar>
       </div>
 
-      <!-- Container Principal Responsivo -->
+      <!-- Container Principal -->
       <div class="main-container">
         <!-- Lista de Conversas -->
-        <div class="conversations-list-container">
+        <div class="conversations-sidebar">
           <div class="conversations-list">
             <div
               v-for="conversation in conversations"
               :key="conversation.id"
               class="conversation-item"
               :class="{ active: isActiveConversation(conversation) }"
-              clickable
               @click="selectConversation(conversation)"
             >
-              <!-- Seção do ícone e informações do usuário -->
-              <q-item-section avatar>
-                <q-avatar>
-                  <q-icon name="person" color="green" />
-                </q-avatar>
-              </q-item-section>
+              <q-avatar size="40px" class="conversation-avatar">
+                <q-icon name="person" color="white" />
+              </q-avatar>
 
-              <!-- Seção com as mensagens e status -->
-              <q-item-section>
-                <q-item-label class="conversation-name">{{
-                  getUserName(conversation)
-                }}</q-item-label>
-                <q-item-label caption class="last-message-preview">{{
-                  conversation.message?.length > 40
-                    ? conversation.message.substring(0, 40) + "..."
-                    : conversation.message
-                }}</q-item-label>
-                <q-item-label
+              <div class="conversation-info">
+                <div class="conversation-name">{{ getUserName(conversation) }}</div>
+                <div class="last-message">
+                  {{ getLastMessagePreview(conversation) }}
+                </div>
+              </div>
+
+              <div class="conversation-meta">
+                <div class="conversation-time">{{ formatDate(conversation.created_at) }}</div>
+                <q-badge 
                   v-if="conversation.sent_messages_count > 0"
-                  caption
-                  class="text-grey-8"
-                >
-                  <q-badge
-                    rounded
-                    color="green"
-                    :label="conversation.sent_messages_count"
-                  />
-                </q-item-label>
-              </q-item-section>
-
-              <!-- Seção com data -->
-              <q-item-section side>
-                <q-item-label caption class="conversation-time">{{
-                  formatDate(conversation.created_at)
-                }}</q-item-label>
-              </q-item-section>
+                  rounded 
+                  color="#bd6513" 
+                  class="message-badge"
+                  :label="conversation.sent_messages_count"
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Área de Chat Real (visível apenas em desktop) -->
-        <div v-if="!isMobile && selectedConversation" class="chat-area">
+        <!-- Área de Chat (Desktop) -->
+        <div v-if="!isMobile && selectedConversation" class="chat-main-area">
           <!-- Header do Chat -->
-          <div class="chat-header bg-white q-px-md q-py-sm">
-            <div class="row items-center no-wrap">
-              <q-avatar
-                size="36px"
-                class="q-mr-md"
-                color="grey-5"
-                text-color="white"
-              >
-                <q-icon name="person" size="18px" />
+          <div class="chat-header">
+            <div class="chat-partner-info">
+              <q-avatar size="40px" class="partner-avatar">
+                <q-icon name="person" color="white" />
               </q-avatar>
-
-              <div class="col">
-                <div class="text-weight-medium text-body2">
-                  <template v-if="selectedReceiver">
-                    <span v-if="selectedReceiver.empresas.length > 0">
-                      {{ selectedReceiver.empresas[0].nome }}
-                    </span>
-                    <span v-else-if="selectedReceiver.entregadores.length > 0">
-                      {{ selectedReceiver.name }}
-                    </span>
-                    <span v-else>
-                      {{ selectedReceiver.name }}
-                    </span>
-                  </template>
-                </div>
-
-                <div class="text-caption text-grey-6">
-                  <template
-                    v-if="
-                      selectedReceiver && selectedReceiver.empresas.length > 0
-                    "
-                  >
-                    @{{ selectedReceiver.empresas[0].username }}
-                  </template>
-                  <template v-else-if="selectedReceiver"> Online </template>
+              <div class="partner-details">
+                <div class="partner-name">{{ getUserName(selectedConversation) }}</div>
+                <div class="partner-status">
+                  <q-badge color="green" rounded class="status-badge">
+                    Online
+                  </q-badge>
                 </div>
               </div>
+            </div>
+
+            <div class="header-actions">
+              <q-btn flat round icon="call" class="action-btn">
+                <q-tooltip>Chamada de voz</q-tooltip>
+              </q-btn>
+              <q-btn flat round icon="info" class="action-btn">
+                <q-tooltip>Informações</q-tooltip>
+              </q-btn>
             </div>
           </div>
 
           <!-- Área de Mensagens -->
           <div class="messages-area">
-            <div class="messages-container">
+            <div class="messages-container" ref="messagesContainer">
+              <!-- Indicador de mensagens anteriores -->
+              <div v-if="hasOlderMessages" class="messages-info">
+                <q-btn 
+                  flat 
+                  dense 
+                  color="primary" 
+                  icon="expand_less" 
+                  @click="loadOlderMessages"
+                  class="load-older-btn"
+                  :loading="loadingOlderMessages"
+                >
+                  Ver {{ allMessages.length - chatMessages.length }} mensagens anteriores
+                </q-btn>
+              </div>
+
+              <!-- Indicador de carregamento -->
+              <div v-if="loadingOlderMessages" class="loading-indicator">
+                <q-spinner size="20px" color="#bd6513" />
+                <div>Carregando mensagens...</div>
+              </div>
+
               <div
                 v-for="message in chatMessages"
                 :key="message.id"
-                class="message-wrapper"
-                :class="messageClass(message)"
+                :class="['message-wrapper', messageClass(message)]"
               >
-                <!-- Mensagem com Produto -->
-                <div class="message-bubble" v-if="message.product">
-                  <div class="product-card bg-grey-2 rounded-borders q-mb-sm">
-                    <div class="row items-center no-wrap q-pa-sm">
+                <div class="message-content">
+                  <!-- Avatar para mensagens recebidas -->
+                  <q-avatar 
+                    v-if="messageClass(message) === 'incoming'"
+                    size="32px" 
+                    class="message-avatar"
+                  >
+                    <q-icon name="person" color="white" />
+                  </q-avatar>
+
+                  <div class="message-bubble-container">
+                    <!-- Produto em destaque -->
+                    <div v-if="message.product" class="product-preview">
                       <q-img
-                        v-if="
-                          message.product.images &&
-                          message.product.images.length > 0
-                        "
+                        v-if="message.product.images?.length > 0"
                         :src="getImageUrl(message.product.images[0])"
-                        class="product-image rounded-borders"
-                        style="height: 45px; width: 45px"
+                        class="product-image"
                       />
-                      <div class="col q-ml-md">
-                        <div
-                          class="text-caption text-weight-medium text-grey-9"
-                        >
-                          {{ truncatedProductName(message.product.name) }}
-                        </div>
-                        <div
-                          class="text-caption text-grey-6 q-mt-xs"
-                          style="font-size: 10px"
-                        >
-                          {{
-                            truncatedProductDescription(
-                              message.product.description
-                            )
-                          }}
-                        </div>
-                        <div
-                          class="text-caption text-weight-bold q-mt-xs text-orange"
-                        >
-                          {{ formatPrice(message.product.price) }}
-                        </div>
+                      <div class="product-details">
+                        <div class="product-name">{{ message.product.name }}</div>
+                        <div class="product-price">{{ formatPrice(message.product.price) }}</div>
+                      </div>
+                    </div>
+
+                    <div :class="['message-bubble', messageClass(message)]">
+                      <div class="message-text">{{ message.message }}</div>
+                      <div class="message-time">
+                        {{ formatTime(message.created_at) }}
+                        <span v-if="messageClass(message) === 'outgoing'" class="message-status">
+                          <q-icon name="done_all" size="14px" />
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  <div class="message-content">
-                    <div class="message-text">
-                      {{ message.message }}
-                    </div>
-                    <div class="message-time">
-                      {{ formatTime(message.created_at) }}
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Mensagem Normal -->
-                <div class="message-bubble" v-else>
-                  <div class="message-content">
-                    <div class="message-text">
-                      {{ message.message }}
-                    </div>
-                    <div class="message-time">
-                      {{ formatTime(message.created_at) }}
-                    </div>
-                  </div>
+                  <!-- Avatar para mensagens enviadas -->
+                  <q-avatar 
+                    v-if="messageClass(message) === 'outgoing'"
+                    size="32px" 
+                    class="message-avatar"
+                  >
+                    <q-icon name="person" color="white" />
+                  </q-avatar>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <!-- Produto em Destaque -->
-          <div
-            class="current-product bg-grey-3 q-px-md q-py-sm"
-            v-if="currentProduct"
-          >
-            <div class="row items-center no-wrap">
-              <q-img
-                v-if="currentProduct.images && currentProduct.images.length > 0"
-                :src="getImageUrl(currentProduct.images[0])"
-                class="rounded-borders q-mr-md"
-                style="height: 35px; width: 35px"
-              />
-              <div class="col">
-                <div class="text-caption text-weight-medium text-grey-9">
-                  {{ currentProduct.name }}
-                </div>
-                <div class="text-caption text-orange">
-                  {{ formatPrice(currentProduct.price) }}
-                </div>
-              </div>
-              <q-btn flat round icon="close" size="sm" @click="removeProduct" />
             </div>
           </div>
 
           <!-- Input de Mensagem -->
-          <div class="message-input bg-white q-px-md q-py-md">
-            <div class="row items-center no-wrap q-gutter-x-sm">
-              <q-btn
-                flat
-                round
-                icon="attach_file"
-                size="sm"
-                class="text-grey-6"
-              />
+          <div class="message-input-area">
+            <div class="input-container">
+              <div class="input-actions">
+                <q-btn flat round icon="attach_file" class="input-action-btn">
+                  <q-tooltip>Anexar arquivo</q-tooltip>
+                </q-btn>
+                <q-btn flat round icon="image" class="input-action-btn">
+                  <q-tooltip>Enviar imagem</q-tooltip>
+                </q-btn>
+              </div>
 
               <q-input
                 v-model="newMessageText"
                 placeholder="Digite sua mensagem..."
                 borderless
-                class="col-grow"
-                dense
-                bg-color="grey-2"
-                rounded
+                class="message-input-field"
                 @keyup.enter="sendMessage"
                 :disable="registering"
+                autogrow
               />
 
               <q-btn
                 round
-                :icon="!registering ? 'send' : ''"
-                class="send-btn"
-                size="sm"
+                icon="send"
+                class="send-button"
+                :loading="registering"
                 @click="sendMessage"
-                :disable="registering || !newMessageText?.trim()"
+                :disable="!newMessageText?.trim()"
               >
-                <q-spinner-hourglass
-                  v-if="registering"
-                  color="white"
-                  size="14px"
-                />
+                <q-spinner-hourglass v-if="registering" size="18px" />
+                <q-tooltip>Enviar mensagem</q-tooltip>
               </q-btn>
             </div>
           </div>
         </div>
 
         <!-- Estado Vazio para Desktop -->
-        <div v-else-if="!isMobile && !selectedConversation" class="empty-state">
+        <div v-else-if="!isMobile && !selectedConversation" class="empty-chat">
           <div class="empty-content">
-            <q-icon name="forum" size="80px" color="grey-4" />
+            <q-icon name="forum" size="64px" color="#e5e5e5" />
             <div class="empty-title">Nenhuma conversa selecionada</div>
             <div class="empty-subtitle">
               Selecione uma conversa da lista para ver as mensagens
@@ -260,12 +206,13 @@
       </div>
     </div>
 
-    <FooterC v-if="true" />
+    <FooterC />
   </q-layout>
 </template>
 
 <script>
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import store from "src/store/index.js";
 import apiMethods from "src/router/api.js";
 import FooterC from "components/store/FooterC.vue";
@@ -278,7 +225,7 @@ export default {
       selectedConversation: null,
       selectedReceiver: null,
       chatMessages: [],
-      currentProduct: null,
+      allMessages: [], // Todas as mensagens carregadas
       newMessageText: "",
       newMessage: {
         receiver_id: null,
@@ -287,6 +234,10 @@ export default {
       },
       registering: false,
       isMobile: window.innerWidth < 768,
+      maxDisplayedMessages: 5, // Número máximo de mensagens a mostrar
+      hasOlderMessages: false,
+      loadingOlderMessages: false,
+      currentOffset: 0
     };
   },
   components: {
@@ -315,10 +266,8 @@ export default {
     },
     async selectConversation(conversation) {
       if (this.isMobile) {
-        // No mobile, vai para a página de chat
         this.goToMessages(conversation);
       } else {
-        // No desktop, seleciona a conversa e carrega as mensagens
         this.selectedConversation = conversation;
         this.selectedReceiver =
           conversation.sender_id === store.state.user.id
@@ -331,10 +280,70 @@ export default {
       try {
         const receiverId = this.selectedReceiver.id;
         const response = await apiMethods.getMessages(receiverId);
-        this.chatMessages = response.data;
+        
+        // Salvar todas as mensagens
+        this.allMessages = response.data;
+        
+        // Aplicar limite de mensagens exibidas
+        this.applyMessageLimit();
+        
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
       } catch (error) {
         console.error("Erro ao carregar mensagens:", error);
       }
+    },
+
+    applyMessageLimit() {
+      if (this.allMessages.length > this.maxDisplayedMessages) {
+        // Mostrar apenas as últimas mensagens
+        this.chatMessages = this.allMessages.slice(-this.maxDisplayedMessages);
+        this.hasOlderMessages = true;
+      } else {
+        this.chatMessages = this.allMessages;
+        this.hasOlderMessages = false;
+      }
+    },
+
+    async loadOlderMessages() {
+      if (this.loadingOlderMessages) return;
+      
+      this.loadingOlderMessages = true;
+      
+      try {
+        // Simular um delay de carregamento
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Aumentar o limite de mensagens exibidas
+        this.maxDisplayedMessages += 30;
+        this.applyMessageLimit();
+        
+        // Rolar um pouco para cima para mostrar as novas mensagens carregadas
+        this.$nextTick(() => {
+          const container = this.$refs.messagesContainer;
+          if (container) {
+            // Manter a posição relativa após carregar mais mensagens
+            setTimeout(() => {
+              container.scrollTop = 100; // Pequeno ajuste para mostrar as novas mensagens
+            }, 100);
+          }
+        });
+        
+      } catch (error) {
+        console.error("Erro ao carregar mensagens anteriores:", error);
+      } finally {
+        this.loadingOlderMessages = false;
+      }
+    },
+
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const container = this.$refs.messagesContainer;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      });
     },
     isActiveConversation(conversation) {
       if (!this.selectedConversation) return false;
@@ -348,11 +357,7 @@ export default {
       this.$router.push("/chat/" + id);
     },
     formatDate(date) {
-      return new Date(date).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "2-digit",
-      });
+      return format(new Date(date), "dd/MM/yy");
     },
     getUserName(conversation) {
       if (conversation.sender_id === store.state.user.id) {
@@ -361,46 +366,32 @@ export default {
         }
         return conversation.receiver.name;
       } else {
+        if (conversation.sender.empresas.length > 0) {
+          return conversation.sender.empresas[0].nome;
+        }
         return conversation.sender.name;
       }
+    },
+    getLastMessagePreview(conversation) {
+      if (!conversation.message) return "Nenhuma mensagem";
+      return conversation.message.length > 35 
+        ? conversation.message.substring(0, 35) + "..." 
+        : conversation.message;
     },
     goBack() {
       this.$router.push("/");
     },
-
-    // Métodos do Chat
     formatPrice(price) {
       return `${price} MZN`;
     },
-
     formatTime(date) {
       return format(new Date(date), "HH:mm");
     },
-
-    truncatedProductName(name) {
-      const maxLength = 25;
-      return name.length > maxLength
-        ? name.substring(0, maxLength) + "..."
-        : name;
-    },
-
-    truncatedProductDescription(description) {
-      const maxLength = 40;
-      return description && description.length > maxLength
-        ? description.substring(0, maxLength) + "..."
-        : description;
-    },
-
-    removeProduct() {
-      this.currentProduct = null;
-    },
-
     messageClass(message) {
       return message.sender_id === this.$store.state.user.id
-        ? "message-out"
-        : "message-in";
+        ? "outgoing"
+        : "incoming";
     },
-
     async sendMessage() {
       if (!this.isAuthenticated) {
         localStorage.setItem("newMessage", JSON.stringify(this.newMessage));
@@ -418,22 +409,25 @@ export default {
 
           const response = await apiMethods.sendMessage(this.newMessage);
           localStorage.removeItem("newMessage");
-          this.newMessage.message = "";
           this.newMessageText = "";
 
-          this.chatMessages = response.data.messages;
-          this.registering = false;
+          // Atualizar todas as mensagens
+          this.allMessages = response.data.messages;
+          this.applyMessageLimit();
+          
+          this.$nextTick(() => {
+            this.scrollToBottom();
+          });
 
-          // Atualiza a lista de conversas
           await this.fetchConversations();
         } catch (error) {
-          this.registering = false;
           localStorage.setItem("newMessage", JSON.stringify(this.newMessage));
           console.error("Erro ao enviar mensagem:", error);
+        } finally {
+          this.registering = false;
         }
       }
     },
-
     getImageUrl(imageName) {
       return apiMethods.baseURL() + `/storage/product_images/${imageName.name}`;
     },
@@ -447,83 +441,103 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos gerais da página */
+/* Estilos Gerais */
 .message-list-page {
-  background-color: #f5f5f5;
-  padding: 0;
   min-height: 100vh;
+  background: white;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Container Principal Responsivo */
+.page-header {
+  border-bottom: 1px solid #e5e5e5;
+  flex-shrink: 0;
+}
+
+.back-btn {
+  color: #bd6513;
+}
+
+/* Container Principal - CORREÇÃO AQUI */
 .main-container {
   display: flex;
-  height: calc(100vh - 130px);
-  max-width: 1400px;
+  flex: 1;
+  max-width: 1200px;
   margin: 0 auto;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  min-height: 0; /* Importante para flexbox */
+  overflow: hidden; /* Previne vazamento */
 }
 
-/* Lista de Conversas */
-.conversations-list-container {
-  flex: 1;
-  max-width: 400px;
-  border-right: 1px solid #e0e0e0;
+/* Sidebar de Conversas */
+.conversations-sidebar {
+  width: 350px;
   background: white;
-  overflow-y: auto;
+  border-right: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Importante para flexbox */
 }
 
 .conversations-list {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0; /* Importante para flexbox */
 }
 
-/* Itens individuais de conversa */
 .conversation-item {
-  background-color: white;
-  padding: 16px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #f0f0f0;
-  transition: all 0.2s ease;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f5f5f5;
   cursor: pointer;
-  position: relative;
+  transition: all 0.3s ease;
+  gap: 12px;
+  flex-shrink: 0; /* Impede que os itens encolham */
 }
 
 .conversation-item:hover {
-  background-color: #f8f9fa;
+  background: #fafafa;
 }
 
 .conversation-item.active {
-  background-color: #e3f2fd;
-  border-left: 4px solid #1976d2;
+  background: #fdf6f0;
+  border-right: 3px solid #bd6513;
 }
 
-.conversation-item.active::after {
-  content: "";
-  position: absolute;
-  right: -1px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
-  border-right: 8px solid white;
+.conversation-avatar {
+  background: #bd6513;
+  flex-shrink: 0;
+}
+
+.conversation-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .conversation-name {
   font-weight: 600;
   font-size: 14px;
   color: #333;
+  margin-bottom: 4px;
 }
 
-.last-message-preview {
+.last-message {
   font-size: 13px;
   color: #666;
-  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conversation-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .conversation-time {
@@ -532,23 +546,85 @@ export default {
   white-space: nowrap;
 }
 
-/* Área de Chat para Desktop */
-.chat-area {
-  flex: 2;
+.message-badge {
+  font-size: 10px;
+  min-width: 18px;
+  min-height: 18px;
+}
+
+/* Área Principal do Chat */
+.chat-main-area {
+  flex: 1;
   display: flex;
   flex-direction: column;
   background: white;
+  min-height: 0; /* Importante para flexbox */
 }
 
 .chat-header {
-  border-bottom: 1px solid #e0e0e0;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  flex-shrink: 0; /* Impede que o header encolha */
 }
 
-.messages-area {
-  flex: 1;
-  overflow: hidden;
+.chat-partner-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.partner-avatar {
+  background: #bd6513;
+}
+
+.partner-details {
   display: flex;
   flex-direction: column;
+}
+
+.partner-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+}
+
+.partner-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+  color: #bd6513;
+  background: rgba(189, 101, 19, 0.1);
+}
+
+/* Área de Mensagens */
+.messages-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+  min-height: 0; /* Importante para flexbox */
 }
 
 .messages-container {
@@ -557,84 +633,215 @@ export default {
   padding: 20px;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  min-height: 0; /* Importante para flexbox */
+}
+
+/* Indicador de mensagens anteriores */
+.messages-info {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.load-older-btn {
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #bd6513;
+  transition: all 0.3s ease;
+}
+
+.load-older-btn:hover {
+  background: #fdf6f0;
+  border-color: #bd6513;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 16px 0;
+  color: #666;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .message-wrapper {
-  margin-bottom: 12px;
   display: flex;
+  flex-direction: column;
+  flex-shrink: 0; /* Impede que as mensagens encolham */
 }
 
-.message-wrapper.message-in {
-  justify-content: flex-start;
+.message-wrapper.incoming {
+  align-items: flex-start;
 }
 
-.message-wrapper.message-out {
-  justify-content: flex-end;
+.message-wrapper.outgoing {
+  align-items: flex-end;
 }
 
-.message-bubble {
+.message-content {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
   max-width: 70%;
 }
 
-.message-in .message-bubble {
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 16px;
-  padding: 10px 14px;
+.message-avatar {
+  background: #bd6513;
+  flex-shrink: 0;
 }
 
-.message-out .message-bubble {
-  background: #f27c38;
-  color: white;
-  border-radius: 16px;
-  padding: 10px 14px;
+.message-bubble-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.product-card {
-  border: 1px solid #e0e0e0;
+.product-preview {
+  background: white;
   border-radius: 8px;
+  padding: 10px;
+  border: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 280px;
+}
+
+.product-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.product-details {
+  flex: 1;
+}
+
+.product-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.product-price {
+  font-size: 12px;
+  color: #bd6513;
+  font-weight: 600;
+}
+
+.message-bubble {
+  padding: 10px 14px;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  max-width: 400px;
+  word-wrap: break-word;
+}
+
+.message-bubble.incoming {
+  background: white;
+  border: 1px solid #e5e5e5;
+  color: #333;
+}
+
+.message-bubble.outgoing {
+  background: #bd6513;
+  color: white;
 }
 
 .message-text {
   line-height: 1.4;
-  word-wrap: break-word;
+  font-size: 14px;
+  margin-bottom: 2px;
 }
 
 .message-time {
-  font-size: 0.75rem;
+  font-size: 11px;
   opacity: 0.7;
-  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.message-in .message-time {
+.message-status {
+  display: inline-flex;
+  margin-left: 4px;
+}
+
+/* Input de Mensagem */
+.message-input-area {
+  padding: 16px 20px;
+  background: white;
+  border-top: 1px solid #e5e5e5;
+  flex-shrink: 0; /* Impede que o input encolha */
+}
+
+.input-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  background: #f5f5f5;
+  border-radius: 20px;
+  padding: 6px 6px 6px 16px;
+}
+
+.input-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.input-action-btn {
   color: #666;
+  transition: all 0.3s ease;
 }
 
-.message-out .message-time {
-  color: rgba(255, 255, 255, 0.9);
+.input-action-btn:hover {
+  color: #bd6513;
 }
 
-.current-product {
-  border-top: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
+.message-input-field {
+  flex: 1;
+  background: transparent;
+  font-size: 14px;
 }
 
-.send-btn {
-  background: #f27c38 !important;
-  color: white !important;
+.message-input-field :deep(.q-field__control) {
+  min-height: 36px;
 }
 
-.send-btn:disabled {
-  opacity: 0.6;
+.send-button {
+  background: #bd6513;
+  color: white;
+  width: 40px;
+  height: 40px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.send-button:hover:not(:disabled) {
+  background: #a85510;
+}
+
+.send-button:disabled {
+  background: #e5e5e5;
+  color: #999;
 }
 
 /* Estado Vazio */
-.empty-state {
-  flex: 2;
+.empty-chat {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   background: white;
+  min-height: 0; /* Importante para flexbox */
 }
 
 .empty-content {
@@ -655,23 +862,46 @@ export default {
   line-height: 1.4;
 }
 
-/* Responsividade */
-@media (max-width: 767px) {
-  .message-list-page {
-    padding: 0;
-  }
+/* Scrollbars */
+.conversations-sidebar::-webkit-scrollbar,
+.messages-container::-webkit-scrollbar {
+  width: 4px;
+}
 
+.conversations-sidebar::-webkit-scrollbar-track,
+.messages-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.conversations-sidebar::-webkit-scrollbar-thumb,
+.messages-container::-webkit-scrollbar-thumb {
+  background: #bd6513;
+  border-radius: 2px;
+}
+
+.conversations-sidebar::-webkit-scrollbar-thumb:hover,
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: #a85510;
+}
+
+/* Responsividade Mobile */
+@media (max-width: 767px) {
   .main-container {
     flex-direction: column;
-    height: auto;
-    border-radius: 0;
-    box-shadow: none;
+    min-height: auto;
   }
 
-  .conversations-list-container {
-    max-width: none;
+  .conversations-sidebar {
+    width: 100%;
     border-right: none;
     flex: none;
+    max-height: calc(100vh - 200px); /* Altura ajustada para mobile */
+  }
+
+  .chat-main-area,
+  .empty-chat {
+    display: none;
   }
 
   .conversation-item {
@@ -679,71 +909,31 @@ export default {
   }
 
   .conversation-item.active {
-    border-left: none;
-    background-color: #e3f2fd;
-  }
-
-  .conversation-item.active::after {
-    display: none;
-  }
-
-  /* Esconder área de chat no mobile */
-  .chat-area,
-  .empty-state {
-    display: none;
+    border-right: none;
+    background: #fdf6f0;
   }
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+/* Desktop com altura segura */
+@media (min-width: 768px) {
   .main-container {
-    margin: 0 16px;
-    height: calc(100vh - 150px);
-  }
-
-  .conversations-list-container {
-    max-width: 350px;
+    height: calc(100vh - 140px); /* Altura segura considerando header e footer */
   }
 }
 
-@media (min-width: 1024px) {
-  .main-container {
-    margin: 20px auto;
-    height: calc(100vh - 170px);
+/* Animações */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Scrollbar personalizada */
-.conversations-list-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.conversations-list-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.conversations-list-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.conversations-list-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-.messages-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.messages-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.messages-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+.message-bubble {
+  animation: messageSlideIn 0.3s ease;
 }
 </style>
